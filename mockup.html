@@ -1,0 +1,900 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Dispatch — mockup</title>
+<style>
+:root{
+  --bg:#070b14;--ground:#070c17;--road:#17243e;--road-line:#26405f;--water:#081a33;
+  --wire:#4f7396;--wire-hi:#a9cbe6;--bld-top:#101a30;--bld-x:#0c1528;--bld-y:#09101f;
+  --panel:#111829;--panel-2:#1a2338;--ink:#03050a;--text:#eef2f7;--muted:#8d9ab0;
+  --accent:#ffc53d;--info:#3ec6c1;--ok:#7ed957;--fail:#f08a4b;--alert:#ff3b4a;
+  --st-mission:#ffc53d;--st-investigate:#3ec6c1;--st-radio:#8ecbff;--st-standby:#9aa4bd;--st-idle:#5d6781;
+  --font-display:"Bahnschrift SemiBold Condensed","Bahnschrift","Arial Narrow",Impact,sans-serif;
+  --font-ui:"Segoe UI",system-ui,sans-serif;
+  --font-mono:"Cascadia Mono",Consolas,monospace;
+  --halftone:radial-gradient(rgba(0,0,0,.55) 1px,transparent 1.4px) 0 0/5px 5px;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:14px/1.45 var(--font-ui);overflow:hidden;
+  display:grid;grid-template-rows:52px 1fr 128px;grid-template-columns:320px 1fr;grid-template-areas:"h h" "log map" "roster roster";}
+.mono{font-family:var(--font-mono)}
+.display{font-family:var(--font-display);text-transform:uppercase;letter-spacing:.04em}
+.box{background:var(--panel);border:2px solid var(--ink);border-radius:6px;box-shadow:4px 4px 0 var(--ink)}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{background:var(--panel-2);border:2px solid var(--ink);border-radius:4px;box-shadow:3px 3px 0 var(--ink);padding:4px 10px;font-family:var(--font-display);text-transform:uppercase;letter-spacing:.04em;font-size:13px;transition:transform .12s,box-shadow .12s}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn[aria-pressed="true"]{background:var(--accent);color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:3px 3px 0 var(--ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* header */
+header{grid-area:h;display:flex;align-items:center;gap:16px;padding:0 14px;border-bottom:2px solid var(--ink);background:var(--panel)}
+.brand{font-size:21px;font-weight:700}
+.shift{font-family:var(--font-display);letter-spacing:.06em;font-size:13px;color:var(--ink);background:var(--accent);border:2px solid var(--ink);border-radius:3px;padding:0 6px}
+.tag{color:var(--muted);font-size:11px}
+.stat{font-size:12px;color:var(--muted);letter-spacing:.04em}.stat b{color:var(--text);font-weight:600;font-size:13px}
+.spacer{flex:1}
+.calls{background:var(--alert);color:var(--ink);border:2px solid var(--ink);border-radius:4px;box-shadow:3px 3px 0 var(--ink);padding:3px 10px;font-family:var(--font-display);font-size:14px;animation:pulse 1s steps(2) infinite}
+.calls[hidden]{display:none}
+@keyframes pulse{50%{background:#c82635}}
+
+/* side */
+#side{grid-area:log;display:flex;flex-direction:column;gap:12px;margin:12px 0 12px 12px;min-height:0}
+#log{display:flex;flex-direction:column;overflow:hidden;flex:1;min-height:120px}
+.panel-title{font-family:var(--font-display);text-transform:uppercase;letter-spacing:.04em;color:var(--accent);font-size:15px;padding:10px 14px 6px;display:flex;align-items:center;gap:8px}
+.panel-title .live{width:8px;height:8px;border-radius:50%;background:var(--ok);border:1px solid var(--ink)}
+#logList{list-style:none;margin:0;padding:0 14px 10px;overflow-y:auto;flex:1;font-size:13px}
+#logList li{padding:6px 0;border-bottom:1px dashed rgba(141,154,176,.16);animation:slideIn .25s ease-out}
+#logList .t{color:var(--muted);font-size:11px;margin-right:6px}
+#logList .cs{font-family:var(--font-display);letter-spacing:.04em;margin-right:4px}
+#logList .ok{color:var(--ok)}#logList .fail{color:var(--fail)}#logList .call{color:var(--alert)}#logList .deleg{color:var(--info)}#logList .hq{color:var(--accent)}
+#logList code{font-family:var(--font-mono);font-size:12px;background:var(--panel-2);padding:0 4px;border-radius:3px}
+@keyframes slideIn{from{opacity:0;transform:translateY(6px)}}
+
+/* map */
+#mapWrap{grid-area:map;position:relative;margin:12px;overflow:hidden;background:radial-gradient(ellipse at 50% 55%,#0c1426 0%,#060a12 75%)}
+#map{width:100%;height:100%;display:block}
+.hud-corner{position:absolute;font-family:var(--font-mono);font-size:10px;color:var(--wire);letter-spacing:.08em;pointer-events:none}
+.scan{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(transparent 0 3px,rgba(169,203,230,.025) 3px 4px)}
+.district{font-family:var(--font-display);font-size:12px;letter-spacing:.32em;fill:var(--wire-hi);opacity:.6;text-transform:uppercase;paint-order:stroke;stroke:var(--bg);stroke-width:3px;pointer-events:none}
+#map .pad{fill:#0b1426;stroke:var(--wire);stroke-opacity:.35;stroke-width:.1}
+#map .park{fill:#0b1e1a;stroke:#2c6b55;stroke-opacity:.8;stroke-width:.1}
+#map .lawn{fill:#0c1b1d;stroke:#2c6b55;stroke-opacity:.6;stroke-width:.1}
+#map .pier{fill:#0e1729;stroke:var(--wire-hi);stroke-opacity:.5;stroke-width:.12}
+#map .tree{fill:#12332b;stroke:#3a8a6c;stroke-width:.08}
+.mk-name{font-family:var(--font-display);text-transform:uppercase;letter-spacing:.05em;font-size:14px;fill:var(--text)}
+.mk-sub{font-family:var(--font-mono);font-size:9.5px;fill:var(--muted)}
+.mk-ring-alert{fill:none;stroke:var(--alert);stroke-width:3;animation:ringPulse 1s ease-out infinite;transform-box:fill-box;transform-origin:center}
+.beacon{animation:beacon 1s steps(2) infinite}
+@keyframes beacon{50%{opacity:.15}}
+.hero{cursor:pointer}
+.hero .lbl{font-family:var(--font-display);font-size:10px;letter-spacing:.05em;fill:var(--text);paint-order:stroke;stroke:var(--ink);stroke-width:3px;text-transform:uppercase}
+.hero .sel{display:none;fill:none;stroke:var(--text);stroke-width:1.6;stroke-dasharray:3 3}
+.hero.selected .sel{display:block}
+.ring-progress{fill:none;stroke-width:2.5;stroke-dasharray:24 200;animation:spin 3s linear infinite;transform-box:fill-box;transform-origin:center}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ring-alert{fill:none;stroke:var(--alert);stroke-width:2.5;animation:ringPulse 1s ease-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes ringPulse{from{transform:scale(1);opacity:1}to{transform:scale(2);opacity:0}}
+.link-deleg{fill:none;stroke:var(--info);stroke-width:1.8;stroke-dasharray:6 6;animation:flow 1.5s linear infinite;opacity:.9}
+.link-radio{fill:none;stroke:var(--st-radio);stroke-width:1.6;stroke-dasharray:2 5;stroke-linecap:round;animation:flow 1s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-24}}
+.trail{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:.85;filter:drop-shadow(0 0 4px currentColor)}
+.stamp{font-family:var(--font-display);font-size:34px;text-transform:uppercase;paint-order:stroke;stroke:var(--ink);stroke-width:6px;transform-box:fill-box;transform-origin:center;animation:stamp 3.1s ease-out forwards;pointer-events:none}
+@keyframes stamp{0%{transform:scale(1.4) rotate(-8deg);opacity:0}6%{transform:scale(1) rotate(-8deg);opacity:1}87%{opacity:1}100%{transform:scale(1) rotate(-8deg);opacity:0}}
+.lit-flash{animation:litFlash .8s ease-out}
+@keyframes litFlash{0%{fill-opacity:.9}}
+.map-hint{position:absolute;left:12px;bottom:10px;color:var(--muted);font-size:11px;pointer-events:none}
+
+/* detail */
+#detail{position:absolute;top:12px;right:12px;bottom:12px;width:min(340px,calc(100% - 24px));transform:translateX(115%);transition:transform .2s ease-out;display:flex;flex-direction:column;overflow:hidden;z-index:5}
+#detail.open{transform:none}
+.detail-head{display:flex;gap:12px;align-items:center;padding:12px 14px;background:var(--panel-2);border-bottom:2px solid var(--ink);position:relative}
+.detail-head::after{content:"";position:absolute;inset:0;background:var(--halftone);opacity:.35;pointer-events:none}
+.detail-head h3{margin:0;font-size:26px;line-height:1}
+.close{margin-left:auto;background:none;border:2px solid var(--ink);border-radius:4px;width:30px;height:30px;font-size:18px;line-height:1;position:relative;z-index:1}
+.detail-body{padding:10px 14px;overflow-y:auto}
+.detail-body dl{display:grid;grid-template-columns:78px 1fr;gap:5px 10px;margin:0 0 10px;font-size:13px}
+.detail-body dt{color:var(--muted);text-transform:uppercase;font-size:10.5px;letter-spacing:.06em;padding-top:2px}
+.detail-body dd{margin:0}
+.radar{display:block;margin:0 auto 6px}
+.radar text{font-family:var(--font-display);font-size:10px;letter-spacing:.06em;fill:var(--muted);text-transform:uppercase}
+.files{list-style:none;padding:0;margin:0 0 10px;font-size:12px}
+.files li{display:flex;gap:8px;padding:2px 0}
+.files .k{width:44px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.k-read{color:var(--info)}.k-edit{color:var(--accent)}.k-create{color:var(--ok)}
+.section{font-family:var(--font-display);text-transform:uppercase;letter-spacing:.04em;color:var(--accent);font-size:13px;margin:4px 0 6px}
+
+/* badge + status */
+.badge{display:inline-grid;place-items:center;width:34px;height:34px;border:2px solid var(--ink);border-radius:4px;font-family:var(--font-display);font-size:15px;color:var(--ink);font-weight:700;flex:none}
+.badge.sm{width:18px;height:18px;font-size:10px;border-width:1.5px;vertical-align:-3px;margin-right:4px}
+.badge.lg{width:52px;height:52px;font-size:22px;position:relative;z-index:1}
+.m-CL{background:#e9a36b}.m-GP{background:#9be3c7}.m-GM{background:#a9b8ff}.m-GK{background:#d6d6d6}
+.status{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.status svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.s-mission{color:var(--st-mission)}.s-investigate{color:var(--st-investigate)}.s-radio{color:var(--st-radio)}.s-standby{color:var(--st-standby)}.s-idle{color:var(--st-idle)}.s-attention{color:var(--alert)}.s-travel{color:var(--text)}
+
+/* stamina */
+.stamina{height:8px;border:2px solid var(--ink);border-radius:3px;background:rgba(141,154,176,.15);overflow:hidden}
+.stamina i{display:block;height:100%;background:var(--info);transition:width .4s ease}
+.stamina.hot i{background:var(--accent)}
+
+/* roster = portrait strip */
+#roster{grid-area:roster;display:flex;gap:10px;padding:10px 12px 14px;overflow-x:auto;border-top:2px solid var(--ink);background:#0b111f;align-items:flex-end}
+.card{position:relative;flex:none;width:210px;height:96px;padding:0;text-align:left;display:grid;grid-template-columns:72px 1fr;overflow:visible;transition:transform .12s,box-shadow .12s}
+.card:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.card.selected{border-color:var(--text)}
+.card.idle .portrait,.card.idle .info{opacity:.55}
+.card.attention{transform:translateY(-10px);border-color:var(--alert);animation:shake .3s ease-out 1}
+@keyframes shake{25%{transform:translateY(-10px) rotate(-2deg)}75%{transform:translateY(-10px) rotate(2deg)}}
+.portrait{position:relative;border-right:2px solid var(--ink);display:grid;place-items:center;border-radius:4px 0 0 4px;overflow:hidden}
+.portrait::after{content:"";position:absolute;inset:0;background:var(--halftone);opacity:.5}
+.portrait .lm{font-family:var(--font-display);font-size:30px;font-weight:700;color:var(--ink);position:relative;z-index:1}
+.portrait .num{position:absolute;left:4px;top:2px;font-family:var(--font-mono);font-size:10px;color:var(--ink);z-index:1;opacity:.7}
+.portrait .stbar{position:absolute;left:0;right:0;bottom:0;height:18px;display:grid;place-items:center;background:var(--ink);z-index:2}
+.portrait .stbar svg{width:13px;height:13px;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.info{padding:6px 8px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.info .cs{font-family:var(--font-display);font-size:18px;letter-spacing:.04em;line-height:1}
+.info .var{font-size:10px;color:var(--muted);margin-left:4px;font-family:var(--font-ui);letter-spacing:0}
+.card-task{font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-proj{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.info .stamina{margin-top:auto}
+.alert-badge{position:absolute;top:-11px;right:-8px;background:var(--alert);color:var(--ink);border:2px solid var(--ink);border-radius:4px;font-family:var(--font-display);font-size:13px;padding:0 5px;z-index:3}
+.sidekick{position:absolute;top:-11px;left:80px;background:var(--panel);border:2px solid var(--ink);border-radius:4px;font-size:10px;padding:0 6px;font-family:var(--font-display);letter-spacing:.04em;color:var(--info);z-index:3}
+
+/* incoming call */
+#call{flex:none;border-color:var(--alert);animation:callIn .3s ease-out;z-index:10}
+#call[hidden]{display:none}
+#call.ringing{animation:callIn .3s ease-out,callPulse 1s ease-in-out infinite .3s}
+@keyframes callIn{from{transform:translateY(20px);opacity:0}}
+@keyframes callPulse{50%{box-shadow:4px 4px 0 var(--ink),0 0 0 4px rgba(255,59,74,.35)}}
+.call-head{display:flex;align-items:center;gap:8px;padding:7px 12px;background:var(--alert);color:var(--ink);font-family:var(--font-display);font-size:16px;letter-spacing:.04em;border-bottom:2px solid var(--ink);border-radius:4px 4px 0 0}
+.call-head svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.4}
+.call-head .timer{margin-left:auto;font-family:var(--font-mono);font-size:12px}
+.call-body{padding:10px 12px 12px;position:relative}
+.call-who{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.call-who .cs{font-family:var(--font-display);font-size:18px}
+.call-who .where{color:var(--muted);font-size:11.5px}
+.quote{margin:0 0 8px;font-size:14px}
+.quote code{font-family:var(--font-mono)}
+.tech{font-family:var(--font-mono);font-size:12px;background:var(--panel-2);border:2px solid var(--ink);border-radius:4px;padding:6px 8px;margin-bottom:10px;white-space:pre-wrap}
+.tech::before{content:"▸ ";color:var(--accent)}
+.call-actions{display:flex;gap:8px;flex-wrap:wrap}
+.call-actions .btn kbd{font-family:var(--font-mono);font-size:10px;opacity:.7;margin-left:6px}
+.b-approve{background:var(--ok);color:var(--ink)}.b-deny{background:var(--fail);color:var(--ink)}.b-answer{background:var(--info);color:var(--ink)}
+.call-actions.stack{flex-direction:column}
+.call-actions.stack .btn{width:100%;justify-content:flex-start;text-align:left;display:flex;align-items:center}
+.call-actions .opt-id{font-family:var(--font-mono);font-size:11px;opacity:.75;margin-right:8px;min-width:1.2em}
+.kind-tag{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;background:var(--panel-2);border:1px solid var(--ink);border-radius:3px;padding:1px 6px;margin-left:6px;color:var(--ink);background:rgba(3,5,10,.2)}
+.reply{display:none;margin-top:8px}
+.reply.open{display:block}
+.reply textarea{width:100%;min-height:60px;background:var(--panel-2);color:var(--text);border:2px solid var(--ink);border-radius:4px;padding:6px 8px;font:13px var(--font-ui);resize:vertical}
+.call-status{margin-top:8px;font-size:12px;color:var(--muted);min-height:18px}
+.call-stamp{position:absolute;right:14px;top:30px;font-family:var(--font-display);font-size:34px;color:var(--info);border:3px solid currentColor;border-radius:4px;padding:0 8px;transform:rotate(-8deg);animation:stampIn .18s ease-out;background:rgba(17,24,41,.85)}
+@keyframes stampIn{from{transform:scale(1.4) rotate(-8deg);opacity:0}}
+.hint-focus{font-size:11px;color:var(--muted);margin-top:6px}
+
+@media (max-width:900px){
+  body{grid-template-columns:1fr;grid-template-areas:"h" "map" "roster"}
+  #side{position:fixed;left:12px;right:12px;bottom:144px;margin:0;z-index:10;pointer-events:none}
+  #side>*{pointer-events:auto}
+  #log{display:none}
+  .stat.opt,.tag{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .calls{box-shadow:3px 3px 0 var(--ink),0 0 0 3px var(--alert)}
+  .stamp{opacity:1}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand display">AI Dispatch</div>
+  <span class="shift">SHIFT 1</span>
+  <div class="tag mono">divisi hero // lokal</div>
+  <div class="spacer"></div>
+  <div class="stat mono" id="clock">--:--</div>
+  <div class="stat opt">DI LAPANGAN <b class="mono" id="active">0/0</b></div>
+  <div class="stat opt">SELESAI <b class="mono" id="done">0</b></div>
+  <div class="stat opt">BUDGET <b class="mono" id="budget">$0.00</b></div>
+  <button class="calls" id="callsBadge" hidden>!! 1 PANGGILAN</button>
+  <button class="btn" id="tSfx" aria-pressed="false">SFX</button>
+  <button class="btn" id="tMusic" aria-pressed="false">Musik</button>
+  <button class="btn" id="tSerious" aria-pressed="false">Mode serius</button>
+</header>
+
+<div id="side">
+  <section id="call" class="box" hidden tabindex="-1" aria-label="Panggilan masuk"></section>
+  <section id="log" class="box" aria-label="Radio log">
+    <div class="panel-title"><span class="live" aria-hidden="true"></span>Radio log</div>
+    <ul id="logList" aria-live="polite"></ul>
+  </section>
+</div>
+
+<section id="mapWrap" class="box" aria-label="Peta kota">
+  <svg id="map" viewBox="-470 -290 940 540" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Peta kota wireframe: HQ di tengah, gedung kerja ditandai marker"></svg>
+  <div class="scan"></div>
+  <div class="hud-corner" style="left:12px;top:10px">PETA DISPATCH // SEKTOR 7<br><span id="coords">LAT -6.2088 · LON 106.8456</span></div>
+  <div class="hud-corner" style="right:14px;top:10px;text-align:right">U ▲<br>SKALA 1:5000</div>
+  <div class="map-hint mono">1–9 = pilih hero · Space = angkat telepon · Esc = tutup detail</div>
+  <aside id="detail" class="box" aria-label="Detail hero"></aside>
+</section>
+
+<nav id="roster" aria-label="Roster hero"></nav>
+
+<script>
+const SVGNS='http://www.w3.org/2000/svg';
+const ICON={
+  mission:'<path d="M4 20l8-8"/><path d="M13 3l8 8-3 3-8-8z"/>',
+  investigate:'<circle cx="10" cy="10" r="6"/><path d="M15 15l5 5"/>',
+  radio:'<path d="M4 13a8 8 0 0 1 16 0"/><path d="M8 13a4 4 0 0 1 8 0"/><circle cx="12" cy="15" r="1.5"/>',
+  standby:'<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>',
+  idle:'<path d="M5 9h11v5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 10h2a2 2 0 0 1 0 4h-2"/>',
+  attention:'<path d="M5 4h4l2 5-3 2a11 11 0 0 0 5 5l2-3 5 2v4a2 2 0 0 1-2 2A17 17 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
+  box:'<path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v8"/>',
+  hq:'<path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/>'
+};
+const STATUS={
+  attention:{label:'Nelpon markas',color:'var(--alert)',order:0},
+  mission:{label:'On mission',color:'var(--st-mission)',order:1},
+  investigate:{label:'Menyelidiki',color:'var(--st-investigate)',order:2},
+  radio:{label:'Di radio',color:'var(--st-radio)',order:3},
+  standby:{label:'Standby',color:'var(--st-standby)',order:4},
+  idle:{label:'Di markas',color:'var(--st-idle)',order:5}
+};
+
+/* ---------- proyeksi (dunia → layar) ---------- */
+/* Tampak miring: tanah diputar -16° lalu dipipihkan 0.56, z = tinggi. HQ di (0,0). */
+const S=11,TL=.56,ZS=10,ROT=-16*Math.PI/180,CO=Math.cos(ROT),SI=Math.sin(ROT);
+const P=(x,y,z=0)=>[S*(CO*x-SI*y),S*TL*(SI*x+CO*y)-z*ZS];
+const GROUND=`matrix(${S*CO} ${S*TL*SI} ${-S*SI} ${S*TL*CO} 0 0)`;
+const q=p=>p[0].toFixed(1)+','+p[1].toFixed(1);
+const pts=a=>a.map(q).join(' ');
+const R=(x0,y0,x1,y1)=>[[x0,y0],[x1,y0],[x1,y1],[x0,y1]];
+
+/* garis pantai: laut di barat, pantai hampir lurus supaya jalan bertemu tegak lurus */
+const coastX=y=>-36+5*Math.sin(y/17);
+const inSea=(x,y,m=0)=>x<coastX(y)+m;
+const crx=y=>coastX(y)+9;
+
+/* jaringan jalan: grid tegak lurus + jalan pantai. Belokan = kurva S yang tangennya searah sumbu,
+   jadi semua persimpangan 90° (T atau +) dan tidak ada tikungan lancip. */
+const XS=[-8,8,24,40,56,72,88],YS=[-72,-56,-40,-24,-8,8,24,40,56,72],ART_X=[8],ART_Y=[8];
+const SHIFT_X={24:y=>y>=24?6:0},SHIFT_Y={40:x=>x>=40?4:0};
+const OMIT=new Set(['h:-8:-40','v:40:-8','h:-8:40']);
+const gx=(x,y)=>x+(SHIFT_X[x]?SHIFT_X[x](y):0),gy=(x,y)=>y+(SHIFT_Y[y]?SHIFT_Y[y](x):0);
+const SPLITS={H:[0,8],n_bengkel:[-15,8],n_menara:[16,-24],n_perpus:[32,8],n_tunggu:[16,24]};
+const NODES={...SPLITS},ROADS=[];
+for(const x of XS)for(const y of YS)NODES[`g${x}_${y}`]=[gx(x,y),gy(x,y)];
+const CY=[];for(let y=YS[0]-16;y<=YS[YS.length-1]+16;y+=8){CY.push(y);NODES['c'+y]=[crx(y),y]}
+function link(a,b,w,dir){
+  const [ax,ay]=NODES[a],[bx,by]=NODES[b];
+  for(const [k,[px,py]] of Object.entries(SPLITS)){
+    const on=dir==='h'?ay===by&&py===ay&&px>Math.min(ax,bx)&&px<Math.max(ax,bx):ax===bx&&px===ax&&py>Math.min(ay,by)&&py<Math.max(ay,by);
+    if(on){link(a,k,w,dir);link(k,b,w,dir);return}
+  }
+  ROADS.push([a,b,w,dir==='h'?[ax+(bx-ax)/3,ay]:[ax,ay+(by-ay)/3],dir==='h'?[bx-(bx-ax)/3,by]:[bx,by-(by-ay)/3]]);
+}
+for(const y of YS){const w=ART_Y.includes(y)?1.4:1.05;link('c'+y,`g${XS[0]}_${y}`,w,'h');
+  for(let i=0;i+1<XS.length;i++)if(!OMIT.has(`h:${XS[i]}:${y}`))link(`g${XS[i]}_${y}`,`g${XS[i+1]}_${y}`,w,'h')}
+for(const x of XS){const w=ART_X.includes(x)?1.4:1.05;
+  for(let j=0;j+1<YS.length;j++)if(!OMIT.has(`v:${x}:${YS[j]}`))link(`g${x}_${YS[j]}`,`g${x}_${YS[j+1]}`,w,'v')}
+{const c=i=>NODES['c'+CY[Math.max(0,Math.min(CY.length-1,i))]];
+  for(let k=0;k+1<CY.length;k++){const p0=c(k),p1=c(k+1),t0=[(c(k+1)[0]-c(k-1)[0])/6,(c(k+1)[1]-c(k-1)[1])/6],t1=[(c(k+2)[0]-c(k)[0])/6,(c(k+2)[1]-c(k)[1])/6];
+    ROADS.push(['c'+CY[k],'c'+CY[k+1],1.4,[p0[0]+t0[0],p0[1]+t0[1]],[p1[0]-t1[0],p1[1]-t1[1]]])}}
+const RAIL=[[crx(-48),-48],[130,-48]];
+
+const LOCS={
+  hq:     {name:'HQ',sub:'hub dispatch',foot:[-3.5,-5,3.5,1],h:7.1,door:[0,1],node:'H',color:'var(--accent)',icon:'hq'},
+  bengkel:{name:'Bengkel Kode',sub:'coding',foot:[-18,14,-12,18],h:2.3,door:[-15,13.8],node:'n_bengkel',color:'var(--st-mission)',icon:'mission'},
+  menara: {name:'Menara Radio',sub:'koordinasi',foot:[14.5,-30.5,17.5,-27.5],h:6,door:[16,-27.3],node:'n_menara',color:'var(--st-radio)',icon:'radio',slim:true},
+  perpus: {name:'Perpustakaan',sub:'membaca',foot:[29,-4,35,0],h:2.6,door:[32,.9],node:'n_perpus',color:'var(--st-investigate)',icon:'investigate'},
+  tunggu: {name:'Ruang Tunggu',sub:'standby',foot:[12.5,13.5,19.5,16.5],h:1.2,door:[16,18.2],node:'n_tunggu',color:'var(--st-standby)',icon:'standby'},
+  dermaga:{name:'Dermaga Kirim',sub:'commit',foot:[-37,-11,-33,-5],h:1.1,door:[-32.8,-8],node:'c-8',color:'var(--ok)',icon:'box'}
+};
+for(const [k,L] of Object.entries(LOCS)){
+  const [x0,y0,x1,y1]=L.foot;L.cx=(x0+x1)/2;L.cy=(y0+y1)/2;
+  const [rx,ry]=P(L.cx,L.cy,L.h);L.mk=[rx,ry-44];
+  NODES['@'+k]=L.door;const [ax,ay]=L.door,[bx,by]=NODES[L.node];
+  ROADS.push(['@'+k,L.node,.85,[ax+(bx-ax)/3,ay+(by-ay)/3],[bx-(bx-ax)/3,by-(by-ay)/3]]);
+}
+
+/* ruas jalan (Bezier kubik) → titik sampel (dunia), graf untuk rute hero */
+const EDGE={},ADJ={};
+for(const [a,b,w,c1,c2] of ROADS){
+  const [ax,ay]=NODES[a],[bx,by]=NODES[b],len=Math.hypot(bx-ax,by-ay),n=Math.max(2,Math.ceil(len/.6)),p=[];
+  for(let i=0;i<=n;i++){const t=i/n,u=1-t;p.push([u*u*u*ax+3*u*u*t*c1[0]+3*u*t*t*c2[0]+t*t*t*bx,u*u*u*ay+3*u*u*t*c1[1]+3*u*t*t*c2[1]+t*t*t*by])}
+  EDGE[a+'>'+b]={p,w,c1,c2};EDGE[b+'>'+a]={p:[...p].reverse(),w};
+  (ADJ[a]=ADJ[a]||[]).push([b,len]);(ADJ[b]=ADJ[b]||[]).push([a,len]);
+}
+function nodePath(a,b){
+  const dist={[a]:0},prev={},open=new Set([a]);
+  while(open.size){let u=null;for(const n of open)if(u===null||dist[n]<dist[u])u=n;open.delete(u);if(u===b)break;
+    for(const [v,l] of ADJ[u]){const d=dist[u]+l;if(dist[v]===undefined||d<dist[v]){dist[v]=d;prev[v]=u;open.add(v)}}}
+  const out=[b];while(out[0]!==a)out.unshift(prev[out[0]]);return out;
+}
+function roadPts(a,b){const ns=nodePath(a,b),out=[NODES[a]];for(let i=1;i<ns.length;i++)out.push(...EDGE[ns[i-1]+'>'+ns[i]].p.slice(1));return out}
+const LOC_OF={mission:'bengkel',investigate:'perpus',radio:'menara',standby:'tunggu',idle:'hq'};
+
+const heroes=[
+  {id:'rex',cs:'Rex',model:'CL',variant:'Opus',status:'mission',project:'one-bff-go',task:'Refactor middleware identity',branch:'feat/identity-v2',session:'sess_8f2a91c',tok:[124,200],cost:0.84,stats:[.9,.5,.3,.2,.6],
+   files:[['edit','internal/middleware/identity.go'],['read','internal/session/redis.go'],['create','internal/middleware/identity_test.go']],history:['✓ a1c9e2f tambah header X-User-Email','✗ go vet: unused import']},
+  {id:'rex2',cs:'Rex-2',parent:'rex',model:'CL',variant:'Haiku',status:'investigate',project:'one-bff-go',task:'Cari pola test middleware',branch:'feat/identity-v2',session:'sess_8f2a91c/sub1',tok:[18,200],cost:0.02,stats:[.2,.9,.1,.1,0],files:[['read','internal/middleware/auth_test.go']],history:[]},
+  {id:'nova',cs:'Nova',model:'GP',variant:'5.6',status:'radio',radioTo:'rex',project:'one-bff-go',task:'Review kontrak header X-User-*',branch:'feat/identity-v2',session:'sess_77d01ab',tok:[76,200],cost:0.21,stats:[.2,.7,.9,.3,.1],files:[['read','docs/api-contract.md']],history:['✓ review: 2 catatan']},
+  {id:'byte',cs:'Byte',model:'CL',variant:'Sonnet',status:'mission',project:'operational-keuangan',task:'Bump go-common ke versi terbaru',branch:'chore/bump-go-common',session:'sess_3be44c0',tok:[176,200],cost:0.31,stats:[.7,.6,.2,.5,.4],
+   files:[['edit','go.mod'],['read','main.go'],['read','CLAUDE.md']],history:['✓ 9f03b1d update import path']},
+  {id:'ivy',cs:'Ivy',model:'GM',variant:'3.8 Flash',status:'investigate',project:'documents-service',task:'Baca kontrak upload dokumen',branch:'main',session:'sess_c1a2090',tok:[42,200],cost:0.05,stats:[.3,.95,.2,.1,.1],files:[['read','internal/handler/upload.go'],['read','docs/API.md']],history:[]},
+  {id:'kilo',cs:'Kilo',model:'GK',variant:'4.7',status:'standby',project:'bsc-be',task:'Menunggu hasil go test ./...',branch:'fix/realisasi-rounding',session:'sess_5520fe1',tok:[94,200],cost:0.12,stats:[.6,.3,.1,.8,.5],files:[['edit','app/service/realisasi.go']],history:['✓ 44ab7c0 fix pembulatan realisasi']},
+  {id:'mochi',cs:'Mochi',model:'CL',variant:'Haiku',status:'idle',project:'—',task:'—',branch:'—',session:'sess_09e1d3a',tok:[8,200],cost:0.01,stats:[.3,.3,.2,.1,.2],files:[],history:['✓ selesai: rapikan README']}
+];
+const byId=Object.fromEntries(heroes.map(h=>[h.id,h]));
+const MODEL_BG={CL:'#e9a36b',GP:'#9be3c7',GM:'#a9b8ff',GK:'#d6d6d6'};
+let selected=null,serious=false,sfxOn=false,ac=null,music=null,lastKrrk=0,doneCount=7;
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const icon=(k,cls='')=>`<svg viewBox="0 0 24 24" class="${cls}" aria-hidden="true">${ICON[k]}</svg>`;
+const statusHtml=h=>h.path?`<span class="status s-travel">${icon('hq')}Menuju ${LOCS[h.loc].name}</span>`:`<span class="status s-${h.status}">${icon(h.status)}${STATUS[h.status].label}</span>`;
+const badge=(m,cls='')=>`<span class="badge ${cls} m-${m}" aria-label="model ${m}">${m}</span>`;
+const fmtTok=n=>n>=1000?(n/1000).toFixed(1)+'M':n+'k';
+const now=()=>new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+const el=(tag,attrs={},html='')=>{const e=document.createElementNS(SVGNS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(html)e.innerHTML=html;return e};
+
+/* ---------- header ---------- */
+function renderHeader(){
+  $('#budget').textContent='$'+heroes.reduce((a,h)=>a+h.cost,0).toFixed(2);
+  $('#active').textContent=heroes.filter(h=>h.loc!=='hq').length+'/'+heroes.length;
+  $('#done').textContent=doneCount;
+  const n=heroes.filter(h=>h.status==='attention').length;
+  const b=$('#callsBadge');b.hidden=!n;b.textContent=`!! ${n} PANGGILAN`;
+}
+setInterval(()=>$('#clock').textContent=now().slice(0,5),1000);$('#clock').textContent=now().slice(0,5);
+
+/* ---------- roster (strip portrait) ---------- */
+function renderRoster(){
+  const sorted=heroes.filter(h=>!h.parent).sort((a,b)=>STATUS[a.status].order-STATUS[b.status].order);
+  $('#roster').innerHTML=sorted.map((h,i)=>{
+    const pct=Math.round(h.tok[0]/h.tok[1]*100),kid=heroes.find(k=>k.parent===h.id),col=STATUS[h.status].color;
+    return `<button class="card box ${h.status}${selected===h.id?' selected':''}" data-id="${h.id}" aria-label="${h.cs}, ${STATUS[h.status].label}">
+      ${h.status==='attention'?'<span class="alert-badge">!!</span>':''}
+      ${kid?`<span class="sidekick">+ ${kid.cs}</span>`:''}
+      <div class="portrait" style="background:${MODEL_BG[h.model]}"><span class="num">${i+1}</span><span class="lm">${h.model}</span>
+        <span class="stbar"><svg viewBox="0 0 24 24" style="stroke:${h.path?'var(--text)':col}">${ICON[h.path?'hq':h.status]}</svg></span></div>
+      <div class="info"><div><span class="cs">${h.cs}</span><span class="var">${h.variant}</span></div>${statusHtml(h)}
+        <div class="card-task" title="${esc(h.task)}">${esc(h.task)}</div><div class="card-proj mono">${esc(h.project)}</div>
+        <div class="stamina${pct>85?' hot':''}" role="meter" aria-label="stamina ${pct}%" aria-valuenow="${h.tok[0]}" aria-valuemax="${h.tok[1]}"><i style="width:${pct}%"></i></div>
+      </div>
+    </button>`;}).join('');
+  document.querySelectorAll('.card').forEach(c=>c.onclick=()=>select(c.dataset.id));
+}
+
+/* ---------- kota wireframe ---------- */
+let seed=23;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+const qw=p=>p[0].toFixed(2)+','+p[1].toFixed(2),ptsW=a=>a.map(qw).join(' ');
+const ring=(cx,cy,rx,ry,n=18)=>Array.from({length:n},(_,i)=>{const a=i/n*2*Math.PI;return [cx+Math.cos(a)*rx,cy+Math.sin(a)*ry]});
+/* prisma: footprint poligon bebas, hanya sisi yang menghadap kamera digambar */
+function prism(poly,z0,z1,o={}){
+  const n=poly.length,col=o.color,st=col||'var(--wire)';
+  let A=0;for(let i=0;i<n;i++){const [x0,y0]=poly[i],[x1,y1]=poly[(i+1)%n];A+=x0*y1-x1*y0}
+  const B=poly.map(([x,y])=>P(x,y,z0)),Tp=poly.map(([x,y])=>P(x,y,z1));
+  let fx='',fy='',fl='',lit='';
+  for(let i=0;i<n;i++){
+    const j=(i+1)%n,[x0,y0]=poly[i],[x1,y1]=poly[j],ex=x1-x0,ey=y1-y0,nx=A>0?ey:-ey,ny=A>0?-ex:ex;
+    if(SI*nx+CO*ny<=0)continue;
+    const f=`M${q(B[i])}L${q(B[j])}L${q(Tp[j])}L${q(Tp[i])}Z`;
+    if(CO*nx-SI*ny>0)fx+=f;else fy+=f;
+    if(z1-z0>1.3&&!o.plain)for(let z=z0+.8;z<z1-.25;z+=.8){
+      fl+=`M${q(P(x0+ex*.03,y0+ey*.03,z))}L${q(P(x1-ex*.03,y1-ey*.03,z))}`;
+      if(!col&&rnd()<.3){const t=.1+rnd()*.65;lit+=`M${q(P(x0+ex*t,y0+ey*t,z+.4))}L${q(P(x0+ex*(t+.15),y0+ey*(t+.15),z+.4))}`}
+    }
+  }
+  const so=col?1:.55;let s='';
+  if(fx)s+=`<path d="${fx}" fill="${col||'var(--bld-x)'}" fill-opacity="${col?.18:1}" stroke="${st}" stroke-opacity="${so}" stroke-width=".9" stroke-linejoin="round"/>`;
+  if(fy)s+=`<path d="${fy}" fill="${col||'var(--bld-y)'}" fill-opacity="${col?.1:1}" stroke="${st}" stroke-opacity="${so}" stroke-width=".9" stroke-linejoin="round"/>`;
+  if(fl)s+=`<path d="${fl}" stroke="${st}" stroke-opacity="${col?.5:.22}" stroke-width=".6" fill="none"/>`;
+  if(lit)s+=`<path d="${lit}" stroke="#ffd58a" stroke-opacity=".6" stroke-width="1.5" fill="none"/>`;
+  return s+`<polygon class="roof" points="${pts(Tp)}" fill="${col||'var(--bld-top)'}" fill-opacity="${col?.3:1}" stroke="${col||'var(--wire-hi)'}" stroke-opacity="${col?1:.5}" stroke-width="${col?1.5:.9}" stroke-linejoin="round"/>`;
+}
+
+/* district = gaya isi kavling (Voronoi berbobot). Semua kavling mengikuti arah grid jalan. */
+const STY={down:{bw:4.4,bh:3.8,g:1},civic:{bw:5,bh:4,g:1.1},resid:{bw:7.4,bh:3.1,g:.9},old:{bw:3.6,bh:3,g:.7},
+  ind:{bw:8,bh:5,g:1.1},port:{bw:7,bh:3.6,g:1},campus:{bw:9,bh:7,g:1.4},park:{bw:8,bh:6,g:1}};
+const DIST=[
+  {n:'Pusat Kota',c:[4,0],w:1.1,st:'down'},{n:'Pelabuhan',c:[-26,-16],w:.8,st:'port'},{n:'Kota Tua',c:[-22,6],w:.7,st:'old'},
+  {n:'Kawasan Industri',c:[-18,30],w:.8,st:'ind'},{n:'Stadion',c:[0,-40],w:.8,st:'civic'},{n:'Bukit Antena',c:[20,-40],w:1,st:'resid'},
+  {n:'Kampus',c:[32,-8],w:.8,st:'campus'},{n:'Stasiun',c:[48,-50],w:.8,st:'ind'},{n:'Taman Kota',c:[0,38],w:.55,st:'park'},
+  {n:'Terminal',c:[16,18],w:.6,st:'old'},{n:'Perumahan Selatan',c:[16,52],w:1.2,st:'resid'},{n:'Perumahan Timur',c:[58,10],w:1.2,st:'resid'},
+  {n:'Perumahan Barat Daya',c:[-20,56],w:1,st:'resid'},{n:'',c:[64,-50],w:1,st:'resid'}];
+const distAt=(x,y)=>{let b=0,bd=1e9;for(let i=0;i<DIST.length;i++){const d=DIST[i],v=Math.hypot(x-d.c[0],y-d.c[1])/d.w;if(v<bd){bd=v;b=i}}return b};
+
+function renderCity(){
+  seed=23;
+  const ground=[],items=[],trees=[];
+  const vis=(x,y,m=0)=>{const [a,b]=P(x,y);return Math.abs(a)<700+m&&b>-480-m&&b<440+m};
+  const depthOf=poly=>{let x=0,y=0;for(const p of poly){x+=p[0];y+=p[1]}return (SI*x+CO*y)/poly.length};
+  const add=(poly,z0,z1,o={})=>items.push([depthOf(poly),prism(poly,z0,z1,o)]);
+
+  // jalan + rel disampel ke hash, supaya kavling tidak menimpa jalan
+  const HS=4,hash={},put=(x,y,w)=>{const k=Math.floor(x/HS)+','+Math.floor(y/HS);(hash[k]=hash[k]||[]).push([x,y,w])};
+  for(const [a,b,w] of ROADS)for(const [x,y] of EDGE[a+'>'+b].p)put(x,y,w/2);
+  const [r0,r1]=RAIL;for(let x=r0[0];x<r1[0];x+=.6)put(x,r0[1],1);
+  const EXCL=[...Object.values(LOCS).map(L=>{const [x0,y0,x1,y1]=L.foot;return [L.cx,L.cy,Math.hypot(x1-x0,y1-y0)/2+1.4]}),
+    [0,-38,7],[32,-16,3.6],[47,-45.7,6],[0,34,6.2]];
+
+  function free(cx,cy,hw,hh){
+    for(const [u,v] of [[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]])if(inSea(cx+u,cy+v,1.2))return false;
+    for(const [ex,ey,r] of EXCL)if(Math.hypot(Math.max(0,Math.abs(ex-cx)-hw),Math.max(0,Math.abs(ey-cy)-hh))<r)return false;
+    const rr=Math.max(hw,hh)+2.5;
+    for(let i=Math.floor((cx-rr)/HS);i<=Math.floor((cx+rr)/HS);i++)for(let j=Math.floor((cy-rr)/HS);j<=Math.floor((cy+rr)/HS);j++)
+      for(const [x,y,w] of hash[i+','+j]||[])if(Math.abs(x-cx)<hw+w+.25&&Math.abs(y-cy)<hh+w+.25)return false;
+    return true;
+  }
+  function place(cx,cy,hw,hh,d,lvl){
+    if(free(cx,cy,hw,hh)){fill(cx,cy,hw,hh,d);return}
+    if(lvl>=3)return;
+    const nu=hw>1.3?2:1,nv=hh>1.3?2:1;if(nu*nv===1)return;
+    const nhw=nu>1?(hw-.25)/2:hw,nhh=nv>1?(hh-.25)/2:hh;
+    for(let i=0;i<nu;i++)for(let j=0;j<nv;j++)place(cx+(nu>1?(i?1:-1)*(nhw+.25):0),cy+(nv>1?(j?1:-1)*(nhh+.25):0),nhw,nhh,d,lvl+1);
+  }
+  function fill(cx,cy,hw,hh,d){
+    const Rl=(u0,v0,u1,v1)=>R(cx+u0,cy+v0,cx+u1,cy+v1);
+    const pad=cls=>ground.push(`<polygon class="${cls}" points="${ptsW(Rl(-hw,-hh,hw,hh))}"/>`);
+    const treesIn=n=>{for(let i=0;i<n;i++)trees.push([cx+(rnd()*2-1)*(hw-.5),cy+(rnd()*2-1)*(hh-.5)])};
+    const st=d.st,r=rnd();
+    if(st==='park'||(st==='resid'&&r<.06)||(st==='civic'&&r<.3)||(st==='campus'&&r<.15)){pad('park');treesIn(Math.round(hw*hh*.9));if(st==='park'&&r<.2)add(Rl(-.8,-.8,.8,.8),0,.7);return}
+    pad(st==='campus'?'lawn':'pad');
+    if(st==='resid'){
+      const rows=hh*2>=2.4?2:1,rh=hh*2/rows,n=Math.max(1,Math.round(hw*2/1.3)),cw=hw*2/n;
+      for(let k=0;k<rows;k++)for(let i=0;i<n;i++){if(rnd()<.07)continue;const u0=-hw+i*cw+.12,v0=-hh+k*rh+.16;add(Rl(u0,v0,u0+cw-.24,v0+rh-.32),0,.5+rnd()*.35)}
+    }else if(st==='down'||st==='civic'){
+      const f=st==='down'?Math.max(0,1-Math.hypot(cx,cy)/18):0,hg=()=>st==='down'?1.4+rnd()*1.8+f*rnd()*5:.9+rnd()*1.3,m=.3,rr=rnd();
+      if(rr<.3)add(Rl(-hw+m,-hh+m,hw-m,hh-m),0,hg());
+      else if(rr<.6){add(Rl(-hw+m,-hh+m,-m/2,hh-m),0,hg());add(Rl(m/2,-hh+m,hw-m,hh-m),0,hg())}
+      else for(const [a,b] of [[-1,-1],[1,-1],[-1,1],[1,1]]){if(rnd()<.15)continue;const u0=a<0?-hw+m:m/2,v0=b<0?-hh+m:m/2;add(Rl(u0,v0,u0+hw-m*1.5,v0+hh-m*1.5),0,hg())}
+    }else if(st==='old'){
+      let u=-hw+.15;while(u<hw-.6){const w=Math.min(hw-.15-u,.9+rnd()*1.3);if(rnd()<.9)add(Rl(u,-hh+.15+rnd()*.3,u+w-.15,hh-.15-rnd()*.3),0,.7+rnd());u+=w}
+    }else if(st==='ind'){
+      if(hw>2&&hh>1.6&&rnd()<.3){add(Rl(-hw+.4,-hh+.4,hw*.2,hh-.4),0,1+rnd()*.5);for(const b of [-.45,.45])add(ring(cx+hw*.58,cy+hh*b,.8,.8,10),0,1.3,{plain:true})}
+      else if(hh>1.6&&rnd()<.5){add(Rl(-hw+.4,-hh+.4,hw-.4,-.2),0,1+rnd()*.6);add(Rl(-hw+.4,.2,hw-.4,hh-.4),0,.9+rnd()*.5)}
+      else add(Rl(-hw+.4,-hh+.4,hw-.4,hh-.4),0,1.1+rnd()*.6);
+    }else if(st==='port'){
+      if(rnd()<.6){for(let v=-hh+.4;v<hh-.6;v+=.8)for(let u=-hw+.4;u<hw-1.4;u+=1.6)if(rnd()>.2)add(Rl(u,v,u+1.4,v+.55),0,rnd()<.3?.9:.45,{plain:true})}
+      else add(Rl(-hw+.5,-hh+.5,hw-.5,hh-.5),0,.9+rnd()*.4);
+    }else if(st==='campus'){
+      const m=.5,t=1.3,h=1.5+rnd()*.9;
+      if(rnd()<.6){add(Rl(-hw+m,-hh+m,hw-m,-hh+m+t),0,h);add(Rl(-hw+m,-hh+m+t+.2,-hw+m+t,hh-m),0,h);add(Rl(hw-m-t,-hh+m+t+.2,hw-m,hh-m),0,h);treesIn(4)}
+      else{add(Rl(-hw+m,-hh+m,hw-m,-hh+m+t*1.2),0,h);add(Rl(-hw+m,hh-m-t*1.2,hw-m,hh-m),0,h*.8);treesIn(3)}
+    }
+  }
+  // isi tiap blok grid: kavling dipasang rata mengikuti batas blok
+  for(let j=0;j+1<YS.length;j++){
+    const ya=YS[j],yb=YS[j+1];
+    for(let i=-1;i+1<XS.length;i++){
+      const xa=XS[i],xb=XS[i+1];
+      const x0=(i<0?Math.min(crx(ya),crx(yb)):Math.max(gx(xa,ya),gx(xa,yb)))+1,x1=Math.min(gx(xb,ya),gx(xb,yb))-1;
+      const y0=Math.max(gy(xb,ya),i<0?-1e9:gy(xa,ya))+1,y1=Math.min(gy(xb,yb),i<0?1e9:gy(xa,yb))-1;
+      if(x1-x0<2||y1-y0<2||!vis((x0+x1)/2,(y0+y1)/2,120))continue;
+      const d=DIST[distAt((x0+x1)/2,(y0+y1)/2)],st=STY[d.st],W=x1-x0,H=y1-y0;
+      const nu=Math.max(1,Math.round((W+st.g)/(st.bw+st.g))),nv=Math.max(1,Math.round((H+st.g)/(st.bh+st.g)));
+      const lw=(W-(nu-1)*st.g)/nu,lh=(H-(nv-1)*st.g)/nv;
+      for(let a=0;a<nu;a++)for(let b=0;b<nv;b++){const cx=x0+a*(lw+st.g)+lw/2,cy=y0+b*(lh+st.g)+lh/2;if(vis(cx,cy,40))place(cx,cy,lw/2,lh/2,d,0)}
+    }
+  }
+
+  // landmark: stadion, kubah kampus, stasiun, kapal
+  {let s=prism(ring(0,-38,5.5,4.5,22),0,1.5,{plain:true});
+    s+=`<polygon points="${pts(ring(0,-38,3.8,2.8,22).map(p=>P(p[0],p[1],1.5)))}" fill="#0b1e1a" stroke="#3a8a6c" stroke-width="1"/>`;
+    s+=`<polygon points="${pts(R(-2,-39.4,2,-36.6).map(p=>P(p[0],p[1],1.5)))}" fill="none" stroke="#3a8a6c" stroke-opacity=".7" stroke-width=".8"/>`;
+    for(const [x,y] of ring(0,-38,6,5,4)){const [a,b]=P(x,y,0),[c,e]=P(x,y,3.4);s+=`<line x1="${a}" y1="${b}" x2="${c}" y2="${e}" stroke="var(--wire-hi)" stroke-opacity=".6"/><circle cx="${c}" cy="${e}" r="1.6" fill="#ffd58a"/>`}
+    items.push([CO*-38,s])}
+  {let s=prism(ring(32,-16,2.7,2.7,16),0,.6,{plain:true});
+    for(let k=0;k<4;k++){const f=a=>2.4*Math.cos(a),a0=k*Math.PI/8,a1=(k+1)*Math.PI/8;s+=prism(ring(32,-16,f(a0),f(a0),16),.6+2.2*Math.sin(a0),.6+2.2*Math.sin(a1),{plain:true})}
+    items.push([SI*32+CO*-16,s])}
+  ground.push(`<polygon class="pad" points="${ptsW(R(41,-47.8,53,-44))}"/>`);
+  items.push([SI*47+CO*-45.7,prism(R(42,-46.6,52,-44.6),0,1.4)+prism(R(45,-46.2,49,-45),1.4,2.2)+prism(R(41.5,-47.5,52.5,-46.7),1,1.15,{plain:true})]);
+  for(const [y,len] of [[-12,6],[-3.5,5]]){const x0=coastX(y)-2.2,x1=x0-len;
+    items.push([-99,prism([[x0,y-.7],[x0,y+.7],[x1,y+.7],[x1-1.2,y],[x1,y-.7]],0,.6,{plain:true})+prism(R(x0-1.8,y-.5,x0-.5,y+.5),.6,1.5,{plain:true})])}
+
+  // gedung kerja
+  const LB={
+    hq:L=>prism(R(-3.5,-5,3.5,1),0,1.2,L)+prism(R(-2,-3.9,2,-.1),1.2,6.5,L)+prism(R(-.7,-2.6,.7,-1.4),6.5,7.1,{...L,plain:true}),
+    bengkel:L=>prism(R(-18,14,-12,18),0,1.8,L)+[0,1,2].map(i=>prism(R(-17.5+i*1.9,14.6,-16.1+i*1.9,17.4),1.8,2.3,{...L,plain:true})).join(''),
+    menara:L=>{const [a,b]=P(16,-29,6),[c,e]=P(16,-29,7.6);return prism(R(14.5,-30.5,17.5,-27.5),0,1,L)+prism(R(15.4,-29.6,16.6,-28.4),1,6,{...L,plain:true})
+      +`<line x1="${a}" y1="${b}" x2="${c}" y2="${e}" stroke="${L.color}" stroke-width="2"/><circle cx="${c}" cy="${e}" r="3.5" fill="${L.color}" class="beacon" filter="url(#glow)"/>`},
+    perpus:L=>prism(R(29,-4,35,0),0,2.2,L)+prism(R(30,-3.3,34,-.7),2.2,2.6,{...L,plain:true})+prism(R(30.5,0,33.5,.7),0,1.7,{...L,plain:true}),
+    tunggu:L=>prism(R(12.5,13.5,19.5,16.5),0,1.2,L)+prism(R(13,16.5,19,18),.95,1.15,{...L,plain:true}),
+    dermaga:L=>{const c=coastX(-8),p={...L,plain:true};let s=prism(R(-37,-11,-33,-5),0,1.1,L);
+      for(const x of [c-1.4,c-3.6])for(const y of [-8.75,-7.5])s+=prism(R(x-.25,y,x,y+.25),0,2.8,p);
+      return s+prism(R(c-3,-8.45,c-2.2,-7.55),2.2,2.8,p)+prism(R(c-7.8,-8.8,c+1,-7.2),2.8,3.2,p)}
+  };
+  for(const [k,L] of Object.entries(LOCS))items.push([SI*L.cx+CO*L.cy,`<g id="lm-${k}">${LB[k]({color:L.color})}</g>`]);
+
+  // lapisan tanah (koordinat dunia, diproyeksikan lewat matrix)
+  let g='';
+  const coast=[];for(let y=-200;y<=200;y+=2)coast.push([coastX(y),y]);
+  g+=`<polygon points="${ptsW([...coast,[-400,200],[-400,-200]])}" fill="var(--water)"/>`;
+  g+=`<path d="M${coast.map(qw).join('L')}" stroke="var(--wire-hi)" stroke-opacity=".5" stroke-width=".2" fill="none"/>`;
+  g+=`<path d="M${coast.map(([x,y])=>qw([x-1.8,y])).join('L')}" stroke="var(--wire)" stroke-opacity=".4" stroke-width=".12" stroke-dasharray=".6 .8" fill="none"/>`;
+  let wv='';for(let i=0;i<320;i++){const y=-90+rnd()*190,x=coastX(y)-3-rnd()*40;if(vis(x,y))wv+=`M${qw([x,y])}L${qw([x,y+1.4])}`}
+  g+=`<path d="${wv}" stroke="#2f5f8f" stroke-opacity=".6" stroke-width=".13" fill="none"/>`;
+  for(const y of [-16,-8,0]){const c=coastX(y);g+=`<polygon class="pier" points="${ptsW(R(c-8,y-.8,c+1.5,y+.8))}"/>`}
+  g+=`<ellipse cx="0" cy="34" rx="5" ry="3.5" fill="var(--water)" stroke="var(--wire-hi)" stroke-opacity=".5" stroke-width=".15"/><path d="M-3 33.5h2M1 35h2.2M-1 36h1.4" stroke="#2f5f8f" stroke-width=".13"/>`;
+  g+=ground.join('');
+  let rc='',rf='',rm='';
+  for(const [a,b,w,c1,c2] of ROADS){const d=`M${qw(NODES[a])}C${qw(c1)} ${qw(c2)} ${qw(NODES[b])}`;rc+=`<path d="${d}" stroke-width="${w+.45}"/>`;rf+=`<path d="${d}" stroke-width="${w}"/>`;if(w>=1.3)rm+=d}
+  g+=`<g fill="none" stroke="#4d77a0" stroke-linecap="round" stroke-linejoin="round">${rc}</g><g fill="none" stroke="var(--road)" stroke-linecap="round">${rf}</g>`;
+  g+=`<path d="${rm}" fill="none" stroke="#e0bb62" stroke-opacity=".6" stroke-width=".13" stroke-dasharray=".8 1"/>`;
+  const rd=`M${qw(r0)}L${qw(r1)}`;
+  g+=`<path d="${rd}" stroke="#0a1120" stroke-width="1.7"/><path d="${rd}" stroke="#5f7fa3" stroke-width="1.1" stroke-dasharray=".14 .45"/><path d="M${qw([r0[0],r0[1]-.3])}L${qw([r1[0],r1[1]-.3])}M${qw([r0[0],r0[1]+.3])}L${qw([r1[0],r1[1]+.3])}" stroke="var(--wire-hi)" stroke-opacity=".7" stroke-width=".09"/>`;
+  g+=trees.map(p=>`<circle class="tree" cx="${p[0].toFixed(2)}" cy="${p[1].toFixed(2)}" r="${(.38+rnd()*.2).toFixed(2)}"/>`).join('');
+
+  // lampu jalan di sepanjang jalan
+  let lamps='';
+  for(const [a,b,w] of ROADS){if(w<1)continue;const p=EDGE[a+'>'+b].p;for(let i=6;i<p.length-3;i+=12){const [x0,y0]=p[i-1],[x1,y1]=p[i+1],l=Math.hypot(x1-x0,y1-y0)||1,side=i%24<12?1:-1;
+    const x=p[i][0]-(y1-y0)/l*(w/2+.35)*side,y=p[i][1]+(x1-x0)/l*(w/2+.35)*side;if(!vis(x,y))continue;const [sx,sy]=P(x,y);
+    lamps+=`<circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="4" fill="#ffd58a" opacity=".08"/><circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="1.1" fill="#ffd58a" opacity=".85"/>`}}
+
+  items.sort((a,b)=>a[0]-b[0]);
+  let s=`<defs><filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
+  s+=`<rect x="-3000" y="-3000" width="6000" height="6000" fill="var(--ground)"/><g transform="${GROUND}">${g}</g>${lamps}${items.map(i=>i[1]).join('')}`;
+  s+=`<g id="markers"></g><g id="links"></g><g id="trails"></g><g id="heroes"></g><g id="fx"></g>`;
+  $('#map').innerHTML=s;
+  for(const h of heroes)makeHeroNode(h);
+}
+
+/* marker lokasi: melayang di atas gedung, seperti marker panggilan */
+function renderMarkers(){
+  let s='';
+  for(const [k,L] of Object.entries(LOCS)){
+    const [rx,ry]=P(L.cx,L.cy,L.h+(L.slim?1.2:0)),[mx,my]=L.slim?[rx+70,ry+30]:[rx,L.mk[1]];
+    const here=heroes.filter(h=>h.loc===k&&!h.path),alert=here.some(h=>h.status==='attention');
+    L.anchor=[mx,my];
+    s+=`<g><line x1="${rx}" y1="${ry-4}" x2="${mx}" y2="${L.slim?my:my+17}" stroke="${L.color}" stroke-width="1.4" stroke-dasharray="2 3"/>
+      ${alert?`<circle class="mk-ring-alert" cx="${mx}" cy="${my}" r="17"/>`:''}
+      <circle cx="${mx}" cy="${my}" r="16" fill="var(--panel)" stroke="${alert?'var(--alert)':L.color}" stroke-width="2.5"/>
+      <g transform="translate(${mx-10} ${my-10}) scale(.84)" fill="none" stroke="${alert?'var(--alert)':L.color}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${ICON[alert?'attention':L.icon]}</g>
+      <g transform="translate(${mx+22} ${my-13})"><rect width="${Math.max(84,L.name.length*7.6+14)}" height="26" rx="3" fill="var(--panel)" fill-opacity=".92" stroke="var(--ink)" stroke-width="2"/>
+        <rect width="3" height="26" fill="${L.color}"/><text class="mk-name" x="9" y="12">${L.name}</text><text class="mk-sub" x="9" y="22">${L.sub} · ${here.length} hero</text></g>
+    </g>`;
+  }
+  $('#markers').innerHTML=s;
+}
+
+/* ---------- hero di peta ---------- */
+function makeHeroNode(h){
+  const g=el('g',{class:'hero',id:'h-'+h.id,tabindex:0,role:'button'});
+  g.onclick=()=>select(h.parent||h.id);
+  g.onkeydown=e=>{if(e.key==='Enter')select(h.parent||h.id)};
+  $('#heroes').appendChild(g);h.node=g;paintHero(h);
+}
+function paintHero(h){
+  const r=h.parent?9:12,col=h.path?'var(--text)':STATUS[h.status].color;
+  h.node.setAttribute('aria-label',`${h.cs}: ${STATUS[h.status].label}`);
+  h.node.classList.toggle('selected',selected===h.id);
+  h.node.innerHTML=`
+    <circle class="sel" r="${r+7}"/>
+    ${h.status==='attention'?`<circle class="ring-alert" r="${r+1}"/>`:''}
+    <circle r="${r}" fill="${MODEL_BG[h.model]}" stroke="var(--ink)" stroke-width="2"/>
+    <circle r="${r}" fill="none" stroke="${col}" stroke-width="2.5"/>
+    ${h.status==='mission'&&!h.path?`<circle class="ring-progress" r="${r+4}" stroke="${col}"/>`:''}
+    <text y="${h.parent?3:4}" text-anchor="middle" font-size="${h.parent?8:11}" font-weight="700" font-family="var(--font-display)" fill="var(--ink)">${h.model}</text>
+    ${h.status==='attention'?`<g transform="translate(${r-2} ${-r-4})"><rect x="-6" y="-7" width="12" height="13" rx="2" fill="var(--alert)" stroke="var(--ink)" stroke-width="1.5"/><text y="4" text-anchor="middle" font-size="11" font-weight="700" fill="var(--ink)" font-family="var(--font-display)">!</text></g>`:''}
+    <text class="lbl" y="${r+11}" text-anchor="middle">${h.cs}</text>
+    <title>${esc(h.cs)} · ${esc(STATUS[h.status].label)} · ${esc(h.project)}</title>`;
+}
+function slotPos(h){
+  const L=LOCS[h.loc],here=heroes.filter(x=>x.loc===h.loc),i=here.indexOf(h),n=here.length;
+  const perRow=5,row=Math.floor(i/perRow),inRow=Math.min(perRow,n-row*perRow),col=i%perRow;
+  const [mx,my]=L.anchor||L.mk;
+  return [mx+(col-(inRow-1)/2)*30,my-40-row*30];
+}
+function setPos(h,x,y){h.pos=[x,y];h.node.setAttribute('transform',`translate(${x.toFixed(1)} ${y.toFixed(1)})`)}
+function worldRoute(from,to){
+  return [...roadPts('@'+from,'H'),...roadPts('H','@'+to).slice(1)].map(([x,y])=>P(x,y));
+}
+function pathLen(p){let l=0;for(let i=1;i<p.length;i++)l+=Math.hypot(p[i][0]-p[i-1][0],p[i][1]-p[i-1][1]);return l}
+function travel(h,to){
+  const from=h.loc;h.loc=to;
+  const target=slotPos(h),road=worldRoute(from,to),pts2=[h.pos,...road,target];
+  if(reduced){setPos(h,...target);relayout();return}
+  const len=pathLen(pts2);h.path={pts:pts2,len,d:0,speed:Math.max(380,len/2.4)};
+  const tr=el('polyline',{class:'trail',points:pts(road),stroke:LOCS[to].color,style:`color:${LOCS[to].color}`});
+  $('#trails').appendChild(tr);h.trail=tr;
+  paintHero(h);renderMarkers();sfx('whoosh');
+}
+function along(p,d){
+  for(let i=1;i<p.pts.length;i++){const [x0,y0]=p.pts[i-1],[x1,y1]=p.pts[i],seg=Math.hypot(x1-x0,y1-y0);
+    if(d<=seg||i===p.pts.length-1){const t=seg?Math.min(1,d/seg):1;return [x0+(x1-x0)*t,y0+(y1-y0)*t]}d-=seg}
+}
+function stepHero(h,dt){
+  const p=h.path;p.d=Math.min(p.len,p.d+p.speed*dt);setPos(h,...along(p,p.d));
+  if(p.d>=p.len){h.path=null;h.trail&&h.trail.remove();h.trail=null;paintHero(h);relayout();renderRoster();if(h.onArrive){const f=h.onArrive;h.onArrive=null;f()}}
+}
+function relayout(){
+  renderMarkers();
+  for(const h of heroes){if(h.path&&h.trail)continue;const [x,y]=slotPos(h);
+    if(!h.pos||reduced){setPos(h,x,y);continue}
+    if(Math.hypot(x-h.pos[0],y-h.pos[1])>1){const p=[h.pos,[x,y]];h.path={pts:p,len:pathLen(p),d:0,speed:220}}}
+}
+function drawLinks(){
+  let s='';
+  for(const h of heroes){
+    if(h.parent&&h.pos&&byId[h.parent].pos){const [x1,y1]=byId[h.parent].pos,[x2,y2]=h.pos;s+=`<path class="link-deleg" d="M${x1} ${y1}Q${(x1+x2)/2} ${Math.max(mapTop+20,Math.min(y1,y2)-60)} ${x2} ${y2}"/>`}
+    if(h.radioTo&&h.status==='radio'&&!h.path&&byId[h.radioTo].pos){const [x1,y1]=h.pos,[x2,y2]=byId[h.radioTo].pos;s+=`<path class="link-radio" d="M${x1} ${y1}Q${(x1+x2)/2} ${Math.max(mapTop+20,Math.min(y1,y2)-40)} ${x2} ${y2}"/>`}
+  }
+  $('#links').innerHTML=s;
+}
+let last=performance.now();
+function frame(t){
+  const dt=Math.min(.05,(t-last)/1000);last=t;
+  for(const h of heroes)if(h.path)stepHero(h,dt);
+  for(const p of [...packages])stepPackage(p,dt);
+  drawLinks();requestAnimationFrame(frame);
+}
+
+function setStatus(h,s){
+  h.status=s;
+  const to=s==='attention'?h.loc:LOC_OF[s];
+  if(to!==h.loc){log(to==='hq'?'home':'dispatch',h.cs,LOCS[to].name,String(logEvents.length));travel(h,to)}
+  else{paintHero(h);renderMarkers()}
+  renderRoster();renderHeader();if(selected===h.id)select(h.id,true);
+}
+
+/* commit: paket lewat jalan ke dermaga */
+const packages=[];
+function commit(h,sha,msg){
+  log('commit',h.cs,sha,msg);stamp(h.pos,'Beres!','var(--ok)');sfx('thunk');doneCount++;renderHeader();
+  if(reduced)return;
+  const g=el('g',{filter:'url(#glow)'},`<rect x="-6" y="-6" width="12" height="12" rx="2" fill="var(--ok)" stroke="var(--ink)" stroke-width="1.5"/>`);
+  $('#fx').appendChild(g);
+  const p=[h.pos,...worldRoute(h.loc,'dermaga'),P(LOCS.dermaga.cx,LOCS.dermaga.cy,LOCS.dermaga.h)];
+  packages.push({g,pts:p,len:pathLen(p),d:0,speed:Math.max(480,pathLen(p)/1.8)});
+}
+function stepPackage(p,dt){
+  p.d=Math.min(p.len,p.d+p.speed*dt);const [x,y]=along(p,p.d);p.g.setAttribute('transform',`translate(${x} ${y})`);
+  if(p.d>=p.len){p.g.remove();packages.splice(packages.indexOf(p),1);
+    document.querySelectorAll('#lm-dermaga .roof').forEach(r=>{r.classList.remove('lit-flash');void r.getBBox();r.classList.add('lit-flash')})}
+}
+function stamp(pos,text,color){
+  const t=el('text',{x:pos[0],y:pos[1]-26,'text-anchor':'middle',class:'stamp',fill:color});t.textContent=text;
+  $('#fx').appendChild(t);setTimeout(()=>t.remove(),3200);
+}
+
+/* ---------- detail + radar ---------- */
+const AXES=['Coding','Membaca','Koordinasi','Menunggu','Shipping'];
+function radar(v,color){
+  const R=60,c=[120,82],ang=i=>-Math.PI/2+i*2*Math.PI/5,pt=(i,r)=>[c[0]+Math.cos(ang(i))*r,c[1]+Math.sin(ang(i))*r];
+  let s=`<svg class="radar" width="240" height="172" viewBox="0 0 240 172" role="img" aria-label="Profil kerja: ${AXES.map((a,i)=>a+' '+Math.round(v[i]*100)+'%').join(', ')}">`;
+  for(const f of [.33,.66,1])s+=`<polygon points="${pts(AXES.map((_,i)=>pt(i,R*f)))}" fill="none" stroke="var(--wire)" stroke-opacity=".5"/>`;
+  AXES.forEach((a,i)=>{const [x,y]=pt(i,R),[lx,ly]=pt(i,R+14);s+=`<line x1="${c[0]}" y1="${c[1]}" x2="${x}" y2="${y}" stroke="var(--wire)" stroke-opacity=".4"/><text x="${lx}" y="${ly+3}" text-anchor="middle">${a}</text>`});
+  s+=`<polygon points="${pts(v.map((x,i)=>pt(i,R*Math.max(.06,x))))}" fill="${color}" fill-opacity=".35" stroke="${color}" stroke-width="2"/>`;
+  return s+'</svg>';
+}
+function select(id,keep){
+  selected=id;const h=byId[id];if(!keep)renderRoster();
+  heroes.forEach(x=>x.node&&x.node.classList.toggle('selected',x.id===id));
+  const pct=Math.round(h.tok[0]/h.tok[1]*100),kid=heroes.find(k=>k.parent===h.id);
+  $('#detail').innerHTML=`
+    <div class="detail-head">${badge(h.model,'lg')}<div style="position:relative;z-index:1"><h3 class="display">${h.cs}</h3><div class="mono" style="color:var(--muted);font-size:11px">${h.session} · ${h.model} ${h.variant}</div></div>
+      <button class="close" aria-label="Tutup" onclick="closeDetail()">×</button></div>
+    <div class="detail-body">
+      <div class="section">Profil kerja · 1 jam terakhir</div>
+      ${radar(h.stats,STATUS[h.status].color)}
+      <dl>
+        <dt>Status</dt><dd>${statusHtml(h)}</dd>
+        <dt>Lokasi</dt><dd>${LOCS[h.loc].name}</dd>
+        <dt>Misi</dt><dd>${esc(h.task)}</dd>
+        <dt>Project</dt><dd class="mono">${esc(h.project)}</dd>
+        <dt>Branch</dt><dd class="mono">${esc(h.branch)}</dd>
+        <dt>Stamina</dt><dd><div class="stamina${pct>85?' hot':''}" role="meter" aria-valuenow="${h.tok[0]}" aria-valuemax="${h.tok[1]}"><i style="width:${pct}%"></i></div><span class="mono" style="font-size:11px;color:var(--muted)">${fmtTok(h.tok[0])} / ${fmtTok(h.tok[1])} tok</span></dd>
+        <dt>Biaya</dt><dd class="mono">$${h.cost.toFixed(2)}</dd>
+        ${kid?`<dt>Sidekick</dt><dd><span style="color:var(--info)" class="display">${kid.cs}</span> di ${LOCS[kid.loc].name} — ${esc(kid.task)}</dd>`:''}
+      </dl>
+      <div class="section">File disentuh</div>
+      <ul class="files mono">${h.files.length?h.files.map(([k,f])=>`<li><span class="k k-${k}">${k}</span>${esc(f)}</li>`).join(''):'<li style="color:var(--muted)">—</li>'}</ul>
+      <div class="section">Riwayat misi</div>
+      <ul class="files mono">${h.history.length?h.history.map(x=>`<li style="color:${x[0]==='✓'?'var(--ok)':'var(--fail)'}">${esc(x)}</li>`).join(''):'<li style="color:var(--muted)">—</li>'}</ul>
+    </div>`;
+  $('#detail').classList.add('open');
+}
+function closeDetail(){selected=null;$('#detail').classList.remove('open');heroes.forEach(x=>x.node&&x.node.classList.remove('selected'));renderRoster()}
+
+/* ---------- radio log ---------- */
+const DISPATCH_JOKES=['"Meluncur ke {l}. Jangan mampir."','"Ke {l}, sekarang. Kopinya nanti."','"{l} butuh kamu. Katanya."','"Berangkat ke {l}. Hati-hati di jalan."'];
+const cs=(h,c)=>`<span class="cs" style="color:${c}">${h}</span>`;
+const T={
+  dispatch:[(h,l,j)=>`<span class="hq"><span class="cs">HQ → ${h}</span>${DISPATCH_JOKES[+j%DISPATCH_JOKES.length].replace('{l}',l)}</span>`,(h,l)=>`<span class="hq"><span class="cs">HQ → ${h}</span>dikirim ke ${l}</span>`],
+  home:[h=>`${cs(h,'var(--st-idle)')}balik ke markas, bikin kopi.`,h=>`${cs(h,'var(--st-idle)')}kembali ke HQ (idle)`],
+  read:[(h,f)=>`${cs(h,'var(--st-investigate)')}"Lagi baca <code>${f}</code>. Doakan saya."`,(h,f)=>`${cs(h,'var(--st-investigate)')}membaca <code>${f}</code>`],
+  deleg:[(h,t,x)=>`<span class="deleg"><span class="cs">${h} → ${t}</span>"Tolong urus ${x}, saya sibuk."</span>`,(h,t,x)=>`<span class="deleg"><span class="cs">${h} → ${t}</span>delegasi: ${x}</span>`],
+  commit:[(h,sha,m)=>`<span class="ok">✓ <span class="cs">${h}</span>"Beres, paket dikirim." <code>${sha}</code> ${m}</span>`,(h,sha,m)=>`<span class="ok">✓ <span class="cs">${h}</span>commit <code>${sha}</code> ${m}</span>`],
+  error:[(h,e)=>`<span class="fail">✗ <span class="cs">${h}</span>"Waduh." <code>${e}</code></span>`,(h,e)=>`<span class="fail">✗ <span class="cs">${h}</span>error: <code>${e}</code></span>`],
+  call:[(h,k)=>`<span class="call">☎ <span class="cs">${h}</span>${k==='choose'?'"Boss, pilih satu dong."':k==='ask'?'"Boss, saya bingung nih."':'"Boss, butuh izin dulu nih."'}</span>`,(h,k)=>`<span class="call">☎ <span class="cs">${h}</span>${k==='choose'?'menunggu pilihan operator':k==='ask'?'menunggu jawaban operator':'menunggu keputusan operator'}</span>`],
+  answer:[(h,d)=>`<span class="deleg"><span class="cs">HQ → ${h}</span>${d}</span>`,(h,d)=>`<span class="deleg"><span class="cs">HQ → ${h}</span>${d}</span>`]
+};
+const logEvents=[];
+function log(type,...a){const h=heroes.find(x=>x.cs===a[0]);logEvents.push({t:now(),type,a,model:h&&h.model});renderLog();sfx('krrk')}
+function renderLog(){
+  const ul=$('#logList');const stick=ul.scrollHeight-ul.scrollTop-ul.clientHeight<30;
+  ul.innerHTML=logEvents.slice(-80).map(e=>`<li><span class="t mono">${e.t}</span>${e.model?badge(e.model,'sm'):''}${T[e.type][serious?1:0](...e.a.map(esc))}</li>`).join('')||'<li style="color:var(--muted)">Frekuensi sepi. Terlalu sepi.</li>';
+  if(stick)ul.scrollTop=ul.scrollHeight;
+}
+
+/* ---------- incoming call ---------- */
+/* kind: permission | choose | ask — satu panel, tombol berbeda */
+const KIND_TAG={permission:'IZIN',choose:'PILIH',ask:'TANYA'};
+const calls=[
+  {kind:'permission',hero:'byte',quote:'"Boss, saya mau jalankan <code>go mod tidy</code>. Ini bakal ngubah go.sum. Boleh?"',quoteS:'Byte meminta izin menjalankan perintah berikut.',tech:'perintah: go mod tidy\ncwd: operational-keuangan-service\nefek: mengubah go.mod, go.sum'},
+  {kind:'choose',hero:'nova',quote:'"Boss, kontrak header X-User-* versi mana yang saya ikuti? Pilih satu."',quoteS:'Nova meminta pilihan kontrak API.',tech:'konteks: review feat/identity-v2\nfile: docs/api-contract.md',options:[
+    {id:'a',label:'Ikuti draft BFF terbaru (X-User-ID + Email + Name)'},
+    {id:'b',label:'Tetap kontrak lama (hanya X-User-ID)'},
+    {id:'c',label:'Tunda review — tunggu ADR selesai'}
+  ]},
+  {kind:'ask',hero:'ivy',quote:'"Boss, path upload dokumen yang dipakai yang mana? Saya bingung antara dua handler."',quoteS:'Ivy menanyakan path upload yang benar.',tech:'repo: documents-service\nkandidat:\n  · POST /upload\n  · POST /v1/documents'},
+  {kind:'permission',hero:'kilo',quote:'"Test-nya merah terus. Saya boleh hapus test yang flaky?"',quoteS:'Kilo meminta izin menghapus file test.',tech:'aksi: hapus file\npath: app/service/realisasi_flaky_test.go'}
+];
+let callIdx=0,callState='idle',callStart=0,callTimer=null;
+const curCall=()=>calls[callIdx%calls.length];
+function callActions(c,h){
+  if(c.kind==='choose'){
+    const opts=(c.options||[]).map((o,i)=>`<button class="btn" data-d="option" data-oid="${esc(o.id)}" data-olabel="${esc(o.label)}"><span class="opt-id">${i+1}</span>${esc(o.label)}<kbd>${i+1}</kbd></button>`).join('');
+    return `<div class="call-actions stack">${opts}<button class="btn" data-d="other">Lainnya…<kbd>R</kbd></button></div>
+      <div class="reply" id="replyBox"><textarea id="replyText" placeholder="Jawaban custom untuk ${h.cs}… (Ctrl+Enter kirim)"></textarea></div>
+      <div class="hint-focus">Shortcut 1–${(c.options||[]).length} / R = Lainnya, setelah panel difokuskan.</div>`;
+  }
+  if(c.kind==='ask'){
+    return `<div class="call-actions"><button class="btn b-answer" data-d="answer">Jawab<kbd>R</kbd></button></div>
+      <div class="reply open" id="replyBox"><textarea id="replyText" placeholder="Jawaban untuk ${h.cs}… (Ctrl+Enter kirim)"></textarea></div>
+      <div class="hint-focus">Ketik jawaban, lalu Ctrl+Enter atau klik Jawab. Shortcut R fokususkan kotak teks.</div>`;
+  }
+  return `<div class="call-actions">
+        <button class="btn b-approve" data-d="approve">Setujui<kbd>Y</kbd></button>
+        <button class="btn b-deny" data-d="deny">Tolak<kbd>N</kbd></button>
+        <button class="btn" data-d="reply">Balas<kbd>R</kbd></button>
+      </div>
+      <div class="reply" id="replyBox"><textarea id="replyText" placeholder="Pesan untuk ${h.cs}… (Ctrl+Enter kirim)"></textarea></div>
+      <div class="hint-focus">Shortcut Y/N/R aktif setelah panel difokuskan (klik atau Space).</div>`;
+}
+function openCall(){
+  const c=curCall(),h=byId[c.hero],kind=c.kind||'permission';
+  if(h.path){h.onArrive=openCall;return}
+  if(h.status!=='attention'){setStatus(h,'attention');log('call',h.cs,kind)}
+  callState='ringing';callStart=Date.now();
+  const box=$('#call');box.hidden=false;box.className='box ringing';box.dataset.kind=kind;
+  box.innerHTML=`<div class="call-head">${icon('attention')}NELPON MARKAS<span class="kind-tag">${KIND_TAG[kind]||kind}</span><span class="timer" id="ctimer">00:00</span></div>
+    <div class="call-body">
+      <div class="call-who">${badge(h.model)}<span class="cs display">${h.cs}</span><span class="where mono">· ${LOCS[h.loc].name} · ${esc(h.project)}</span></div>
+      <p class="quote">${serious?c.quoteS:c.quote}</p>
+      <div class="tech">${esc(c.tech)}</div>
+      ${callActions(c,h)}
+      <div class="call-status" id="cstatus"></div>
+    </div>`;
+  box.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>decide(b.dataset.d,b));
+  const ta=$('#replyText');if(ta)ta.onkeydown=e=>{if(e.key==='Enter'&&e.ctrlKey){e.preventDefault();send(kind==='ask'?'answer':kind==='choose'?'other':'reply',ta.value.trim())}};
+  clearInterval(callTimer);callTimer=setInterval(()=>{const s=Math.floor((Date.now()-callStart)/1000);const t=$('#ctimer');if(t)t.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')},1000);
+  sfx('ring');
+}
+function decide(d,btn){
+  if(callState!=='ringing')return;
+  if(d==='reply'||d==='other'||d==='answer'){
+    const box=$('#replyBox');if(box)box.classList.add('open');
+    const ta=$('#replyText');if(ta)ta.focus();
+    if(d==='answer'&&ta&&ta.value.trim())send('answer',ta.value.trim());
+    return;
+  }
+  if(d==='option'&&btn){send('option',null,{id:btn.dataset.oid,label:btn.dataset.olabel});return}
+  send(d);
+}
+function send(d,msg,opt){
+  if((d==='reply'||d==='other'||d==='answer')&&!msg){$('#replyText')&&$('#replyText').focus();return}
+  const c=curCall(),h=byId[c.hero],kind=c.kind||'permission';
+  callState='sending';$('#call').classList.remove('ringing');
+  $('#call').querySelectorAll('button,textarea').forEach(b=>b.disabled=true);
+  $('#cstatus').textContent=`Mengirim ke ${h.cs}…`;sfx('click');
+  setTimeout(()=>{
+    callState='answered';clearInterval(callTimer);
+    let statusLine='',logLine='',next='mission';
+    if(d==='approve'){statusLine='Terkirim: disetujui';logLine='✓ disetujui'}
+    else if(d==='deny'){statusLine='Terkirim: ditolak';logLine='✗ ditolak';next='standby'}
+    else if(d==='option'){statusLine=`Terkirim: opsi ${opt.id} — ${opt.label}`;logLine=`pilih [${opt.id}] ${opt.label}`}
+    else if(d==='other'){statusLine=`Terkirim: jawaban custom — "${msg}"`;logLine=`lainnya: "${msg}"`}
+    else if(d==='answer'){statusLine=`Terkirim: jawaban — "${msg}"`;logLine=`jawab: "${msg}"`}
+    else{statusLine=`Terkirim: dibalas — "${msg}"`;logLine=`balas: "${msg}"`}
+    $('#cstatus').textContent=statusLine;
+    $('#call .call-body').insertAdjacentHTML('beforeend','<div class="call-stamp">DIJAWAB</div>');
+    log('answer',h.cs,logLine);
+    setStatus(h,next);
+    setTimeout(()=>{$('#call').hidden=true;callState='idle';callIdx++;setTimeout(openCall,10000)},2000);
+  },800);
+}
+function focusCall(){const box=$('#call');if(!box.hidden){box.focus();select(curCall().hero)}}
+$('#callsBadge').onclick=focusCall;
+
+/* ---------- simulasi ---------- */
+const script=[
+  ['status','ivy','mission'],['commit','rex','b7e21d0','identity: baca X-User-Email'],['status','kilo','mission'],['read','rex2','internal/middleware/auth_test.go'],
+  ['status','nova','investigate'],['status','mochi','investigate'],['error','kilo','FAIL TestRounding'],['status','rex2','mission'],['status','ivy','idle'],
+  ['status','nova','radio'],['commit','byte','c0ffee1','bump go-common'],['status','mochi','idle'],['status','kilo','standby'],['status','rex2','investigate'],['status','ivy','investigate']
+];
+let si=0;
+function tick(){
+  const [ev,id,...a]=script[si++%script.length],h=byId[id];
+  if(h.status==='attention'||h.path)return;
+  if(ev==='status')setStatus(h,a[0]);
+  if(ev==='commit')commit(h,...a);
+  if(ev==='error'){log('error',h.cs,a[0]);stamp(h.pos,'Waduh','var(--fail)');sfx('buzz')}
+  if(ev==='read')log('read',h.cs,a[0]);
+}
+
+/* ---------- keyboard ---------- */
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='TEXTAREA')return;
+  const callFocused=$('#call').contains(document.activeElement);
+  if(callFocused&&callState==='ringing'){
+    const kind=curCall().kind||'permission',k=e.key.toLowerCase();
+    if(kind==='permission'){if(k==='y'){decide('approve');return}if(k==='n'){decide('deny');return}if(k==='r'){e.preventDefault();decide('reply');return}}
+    if(kind==='choose'){if(k==='r'){e.preventDefault();decide('other');return}if(/^[1-9]$/.test(e.key)){const b=$('#call').querySelectorAll('[data-d="option"]')[+e.key-1];if(b){decide('option',b);return}}}
+    if(kind==='ask'&&k==='r'){e.preventDefault();decide('answer');return}
+  }
+  if(e.key===' '&&!callFocused){e.preventDefault();focusCall();return}
+  if(e.key==='Escape'){closeDetail();return}
+  if(/^[1-9]$/.test(e.key)&&!callFocused){const c=document.querySelectorAll('.card')[+e.key-1];if(c)select(c.dataset.id)}
+});
+
+/* ---------- toggles + audio ---------- */
+function toggle(btn,fn){btn.onclick=()=>{const on=btn.getAttribute('aria-pressed')!=='true';btn.setAttribute('aria-pressed',on);fn(on)}}
+const actx=()=>ac||(ac=new AudioContext());
+toggle($('#tSfx'),on=>{sfxOn=on;if(on)actx()});
+toggle($('#tSerious'),on=>{serious=on;renderLog();if(callState==='ringing'){const c=curCall();$('#call .quote').innerHTML=on?c.quoteS:c.quote}});
+toggle($('#tMusic'),on=>{on?startMusic():stopMusic()});
+function tone(f,d,type='sine',v=.08,t0=0){const a=actx(),o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(v,a.currentTime+t0);g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+t0+d);o.connect(g).connect(a.destination);o.start(a.currentTime+t0);o.stop(a.currentTime+t0+d)}
+function noise(d,freq,v=.05,sweep){const a=actx(),b=a.createBuffer(1,a.sampleRate*d,a.sampleRate),x=b.getChannelData(0);for(let i=0;i<x.length;i++)x[i]=Math.random()*2-1;
+  const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=b;f.type='bandpass';f.frequency.value=freq;if(sweep)f.frequency.exponentialRampToValueAtTime(sweep,a.currentTime+d);
+  g.gain.setValueAtTime(v,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+d);s.connect(f).connect(g).connect(a.destination);s.start()}
+function sfx(k){
+  if(!sfxOn)return;
+  if(k==='krrk'){if(Date.now()-lastKrrk<1500)return;lastKrrk=Date.now();noise(.08,1800,.04)}
+  if(k==='whoosh')noise(.35,400,.05,2400);
+  if(k==='ring'){duck();for(let i=0;i<2;i++){tone(880,.35,'sine',.08,i*.8);tone(660,.35,'sine',.08,i*.8+.4)}}
+  if(k==='thunk'){tone(90,.2,'sine',.2);noise(.03,3000,.05)}
+  if(k==='buzz')tone(120,.12,'square',.04);
+  if(k==='click')tone(1400,.03,'square',.03);
+}
+function startMusic(){
+  const a=actx(),master=a.createGain();master.gain.value=.05;master.connect(a.destination);
+  const chords=[[220,277,330,415],[196,247,294,370],[175,220,262,330],[196,247,294,392]];let i=0;
+  const play=()=>{const t=a.currentTime;chords[i++%4].forEach(f=>{[0,3].forEach(det=>{const o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.value=f;o.detune.value=det;
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.18,t+.4);g.gain.linearRampToValueAtTime(0,t+3.3);o.connect(g).connect(master);o.start(t);o.stop(t+3.4)})});
+    [0,.83,1.67,2.5].forEach((b,j)=>{const o=a.createOscillator(),g=a.createGain();o.frequency.value=j%2?140:60;g.gain.setValueAtTime(.25,t+b);g.gain.exponentialRampToValueAtTime(.001,t+b+.15);o.connect(g).connect(master);o.start(t+b);o.stop(t+b+.2)})};
+  play();music={master,id:setInterval(play,3333)};
+}
+function stopMusic(){if(!music)return;clearInterval(music.id);music.master.disconnect();music=null}
+function duck(){if(!music)return;const g=music.master.gain,t=ac.currentTime;g.setValueAtTime(.02,t);g.linearRampToValueAtTime(.05,t+3)}
+
+/* peta selalu memenuhi panel: lebar dunia tetap, tinggi mengikuti rasio panel */
+let mapTop=-300;
+function fitMap(){
+  const r=$('#map').getBoundingClientRect();if(!r.width)return;
+  const vw=Math.max(1000,Math.min(1150,r.width*1.05)),vh=vw*r.height/r.width;mapTop=-vh/2-30;
+  $('#map').setAttribute('viewBox',`${-vw/2} ${-vh/2-30} ${vw} ${vh}`);
+}
+new ResizeObserver(fitMap).observe($('#mapWrap'));
+
+/* ---------- boot: semua hero mulai di HQ ---------- */
+for(const h of heroes){h.target=h.status;h.status='idle';h.loc='hq'}
+fitMap();renderCity();renderMarkers();relayout();renderHeader();renderRoster();
+log('home','Mochi');
+heroes.filter(h=>h.target!=='idle').forEach((h,i)=>setTimeout(()=>setStatus(h,h.target),400+i*450));
+setTimeout(()=>log('deleg','Rex','Rex-2','cari pola test middleware'),2200);
+setTimeout(openCall,4600);
+setInterval(tick,3800);
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
