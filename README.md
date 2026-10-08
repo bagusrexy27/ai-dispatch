@@ -1,33 +1,41 @@
 # AI Dispatch
 
-Web app pemantau agen AI coding — operator sebagai dispatcher, agen sebagai hero di peta kota wireframe (rasa *Dispatch* / AdHoc Studio).
+Pemantau agen AI coding bergaya game *Dispatch*: operator jadi dispatcher, agen jadi hero di peta kota. Lihat sekilas siapa sedang apa, di repo mana, dan jawab saat hero nelpon markas.
 
-## Status
+## Jalankan
 
-Desain + mockup UI (v3). Belum ada backend / data live.
+```bash
+npm install
+npm run dev      # http://localhost:5173
+npm run lint
+npm run build
+```
+
+Tanpa backend: **Demo feed** (toggle di header) menghasilkan event palsu secara offline.
+
+## Shortcut
+
+| Tombol | Aksi |
+|--------|------|
+| `1`–`9` | Pilih hero di roster |
+| `Space` | Fokus panggilan teratas |
+| `Y` / `N` / `R` | Setujui / tolak / balas (permission) |
+| `1`–`9` | Pilih opsi (choose, saat panggilan fokus) |
+| `Ctrl+Enter` | Kirim teks balasan/jawaban |
+| `Esc` | Tutup detail hero |
+
+## Struktur
 
 | File | Isi |
 |------|-----|
-| [`design-style.md`](./design-style.md) | Spec visual & interaksi |
-| [`mockup.html`](./mockup.html) | Mockup satu layar (buka di browser) |
+| `src/world.js` | State dunia + reducer `applyEvent` (satu-satunya jalur update) |
+| `src/demoFeed.js` | Feeder event offline |
+| `src/MapView.jsx` | Peta kota, perjalanan via HQ, sidekick, stempel, paket commit |
+| `src/IncomingCall.jsx` | Panel panggilan `permission` · `choose` · `ask` |
+| `src/lib/status.js` | Status, lokasi, badge model |
+| `src/lib/copy.js` | Teks radio log (normal & mode serius) |
 
-## Jalankan mockup
+## Dokumen
 
-```bash
-# dari folder ini
-python -m http.server 8765 --bind 127.0.0.1
-# lalu buka http://127.0.0.1:8765/mockup.html
-```
-
-Atau buka `mockup.html` langsung di browser (beberapa browser membatasi `file://` untuk audio).
-
-## Yang ada di mockup
-
-- Peta kota wireframe (grid jalan + laut + gedung kerja)
-- Roster hero, radio log, detail + radar
-- Incoming call tiga jenis: **izin** (Y/N/R), **pilih opsi**, **tanya terbuka**
-- Mode serius, SFX, musik (opsional)
-
-## Bukan ini
-
-Ini **bukan** kelanjutan tema “AI Colony Monitor”. Konsep koloni diganti total oleh AI Dispatch.
+- Produk: [`docs/product/PRD.md`](docs/product/PRD.md), [`DOMAIN.md`](docs/product/DOMAIN.md), [`EVENTS.md`](docs/product/EVENTS.md)
+- Teknis: [`docs/tech/API.md`](docs/tech/API.md), [`FRONTEND.md`](docs/tech/FRONTEND.md), [`ARCHITECTURE.md`](docs/tech/ARCHITECTURE.md)
