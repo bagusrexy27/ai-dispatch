@@ -67,6 +67,10 @@ function App() {
   useEffect(() => () => setMusic(false), [])
 
   const dispatch = useCallback((ev) => {
+    if (ev.type === 'hydrate') {
+      dispatchWorld(ev)
+      return
+    }
     sfx(EVENT_SFX[ev.type] ?? (QUIET.has(ev.type) ? null : 'krrk'))
     dispatchWorld({ at: Date.now(), ...ev })
   }, [])

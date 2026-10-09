@@ -38,6 +38,8 @@ test('ingest validates events and updates the snapshot', async () => {
   assert.equal(snap.heroes[0].status, 'coding')
   assert.equal(snap.openCalls[0].callId, 'c1')
   assert.equal(snap.lastEventId, 3)
+  assert.equal(snap.recent.length, 3)
+  assert.equal(snap.recent[2].type, 'call_open')
 })
 
 test('decision is validated, recorded once, and broadcast as call_closed', async () => {

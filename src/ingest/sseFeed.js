@@ -1,3 +1,4 @@
+import { applyEvent, createWorld } from '../world.js'
 import { translate } from './translate.js'
 
 export class DecisionError extends Error {
@@ -5,6 +6,24 @@ export class DecisionError extends Error {
     super(status === 409 ? 'Panggilan sudah tertutup' : `Gagal mengirim keputusan (${status})`)
     this.status = status
   }
+}
+
+/** Rebuild world from snapshot so radio log survives reload (within server buffer). */
+export function worldFromSnapshot(snap) {
+  let state = createWorld()
+  for (const env of snap.recent ?? []) {
+    const ev = translate(env)
+    if (ev) state = applyEvent(state, ev)
+  }
+  for (const call of snap.openCalls ?? []) {
+    if (state.calls.some((c) => c.callId === call.callId)) continue
+    const ev = translate({ type: 'call_open', payload: { call }, ts: call.startedAt })
+    if (ev) state = applyEvent(state, ev)
+  }
+  for (const hero of snap.heroes ?? []) {
+    state = applyEvent(state, { type: 'hero_upsert', heroId: hero.id, hero })
+  }
+  return state
 }
 
 export function startSseFeed(base, dispatch, onConnection) {
@@ -19,8 +38,7 @@ export function startSseFeed(base, dispatch, onConnection) {
       if (!res.ok) throw new Error(`snapshot ${res.status}`)
       const snap = await res.json()
       since = snap.lastEventId ?? 0
-      for (const hero of snap.heroes ?? []) dispatch({ type: 'hero_upsert', heroId: hero.id, hero })
-      for (const call of snap.openCalls ?? []) dispatch(translate({ type: 'call_open', payload: { call } }))
+      dispatch({ type: 'hydrate', world: worldFromSnapshot(snap) })
     } catch (err) {
       dispatch({ type: 'notice', level: 'warn', text: `Snapshot gagal: ${err.message}` })
     }

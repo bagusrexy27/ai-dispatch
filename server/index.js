@@ -118,7 +118,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && url.pathname === '/v1/stream') return openStream(req, res, url)
     if (req.method === 'GET' && url.pathname === '/v1/snapshot') {
       const openCalls = [...calls.values()].filter((c) => c.state === 'ringing').map((c) => c.call)
-      return send(res, 200, { heroes: [...heroes.values()], openCalls, lastEventId: seq })
+      return send(res, 200, { heroes: [...heroes.values()], openCalls, lastEventId: seq, recent: buffer.slice(-100) })
     }
     if (req.method === 'POST' && url.pathname === '/v1/events') return await ingest(req, res)
     if (callMatch) {

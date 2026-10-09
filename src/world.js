@@ -92,6 +92,7 @@ function appendLog(state, entry) {
 }
 
 export function applyEvent(state, ev) {
+  if (ev.type === 'hydrate') return ev.world
   if (ev.type === 'notice') return { ...state, ...appendLog(state, { ...ev, callsign: 'MARKAS', loc: 'hq' }) }
 
   const heroId = ev.heroId ?? state.calls.find((c) => c.callId === ev.callId)?.heroId
@@ -111,7 +112,7 @@ export function applyEvent(state, ev) {
   const callEvent = ['call_result', 'call_closed', 'call_state'].includes(ev.type)
   if (callEvent && !state.calls.some((c) => c.callId === ev.callId)) return state
   if (ev.type === 'call_open' && state.calls.some((c) => c.callId === ev.call.callId)) return state
-  if (hero.status === 'attention' && !callEvent && !PASSIVE.has(ev.type)) return state
+  if (hero.status === 'attention' && !callEvent && ev.type !== 'call_open' && !PASSIVE.has(ev.type)) return state
 
   const patch = heroPatch(hero, ev)
   if (!patch) return state
