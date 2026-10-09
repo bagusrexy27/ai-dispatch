@@ -50,15 +50,16 @@ npm run agent:fake # contoh agen: event + call + tunggu keputusan
 | `VITE_FEED_MODE` | `sse` untuk live (sama dengan `--mode live`); default demo |
 | `VITE_API_BASE` | base URL backend jika tidak lewat proxy Vite |
 | `PORT` / `HOST` | server, default `8787` / `127.0.0.1` |
-| `DISPATCH_TOKEN` | jika diset, `POST /v1/events` wajib Bearer token |
-| `DISPATCH_URL` | target proxy Vite & fake agent |
+| `DISPATCH_TOKEN` | jika diset, Bearer wajib di `POST /v1/events` dan `POST .../decision` |
+| `VITE_DISPATCH_TOKEN` | token yang sama untuk UI (`sendDecision`); set di `.env.local` / mode live |
+| `DISPATCH_URL` | target proxy Vite & fake agent / adapter |
 
 Server menyimpan state di **memori** (restart = kosong). Default hanya localhost.
 
 Kalau diexpose ke LAN:
 
-1. Set `DISPATCH_TOKEN` (wajib Bearer di `POST /v1/events`).
-2. Pertimbangkan firewall; decision endpoint masih tanpa auth (operator lokal) — jangan expose publik tanpa proxy/auth tambahan.
+1. Set `DISPATCH_TOKEN` + `VITE_DISPATCH_TOKEN` (nilai sama).
+2. Firewall / jangan expose publik tanpa proxy tambahan (stream/snapshot masih tanpa auth).
 3. `HOST=0.0.0.0` hanya jika sadar risikonya.
 
 ## Layer 3 — Adapter agen lokal (opsional)
@@ -67,9 +68,8 @@ Panduan langkah demi langkah: [`CONNECT_AGENT.md`](./CONNECT_AGENT.md).
 
 1. Emit event normal ke `POST /v1/events` (lihat [`API.md`](./API.md)).
 2. Poll `GET /v1/calls/{callId}` dan forward keputusan ke agen.
-3. Starter: `npm run agent:fake` · `node adapters/generic-http/emit.mjs upsert` · [`../adapters/`](../../adapters/).
-
-Cursor / Claude Code: planned (belum di repo inti).
+3. Starter: `npm run agent:fake` · `node adapters/generic-http/emit.mjs upsert` · [`../../adapters/`](../../adapters/).
+4. Cursor: [`../../adapters/cursor/`](../../adapters/cursor/) · Claude Code: [`../../adapters/claude-code/`](../../adapters/claude-code/).
 
 ## Mockup visual (referensi)
 

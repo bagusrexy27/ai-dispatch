@@ -47,9 +47,13 @@ export function startSseFeed(base, dispatch, onConnection) {
 }
 
 export async function sendDecision(base, callId, body) {
+  const token = import.meta.env.VITE_DISPATCH_TOKEN
   const res = await fetch(`${base}/v1/calls/${encodeURIComponent(callId)}/decision`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
     body: JSON.stringify(body),
   })
   if (!res.ok) throw new DecisionError(res.status)

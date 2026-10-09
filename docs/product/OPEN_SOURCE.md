@@ -81,8 +81,8 @@ Live (opsional) — lihat [`../tech/SETUP.md`](../tech/SETUP.md).
 | P1 | CONTRIBUTING + konvensi commit | Done | Conventional commits |
 | P1 | Dokumen “connect your agent” | Done | [`../tech/CONNECT_AGENT.md`](../tech/CONNECT_AGENT.md) |
 | P1 | Scaffold `adapters/` | Done | `generic-http` starter + indeks |
-| P2 | Adapter Cursor / Claude Code | Todo | Hook/session log |
-| P2 | Auth jika server diexpose | Partial | `DISPATCH_TOKEN` untuk ingest; decision masih lokal |
+| P2 | Adapter Cursor / Claude Code | Done | `adapters/cursor` · `adapters/claude-code` (observe; gate opsional) |
+| P2 | Auth jika server diexpose | Done | `DISPATCH_TOKEN` untuk ingest + decision; UI: `VITE_DISPATCH_TOKEN` |
 | P3 | Publish npm / template | Todo | Setelah API event stabil |
 | P3 | Multi-operator / room | Todo | Bukan blocker MVP OSS |
 

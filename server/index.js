@@ -2,12 +2,16 @@ import http from 'node:http'
 
 const PORT = Number(process.env.PORT ?? 8787)
 const HOST = process.env.HOST ?? '127.0.0.1'
-const INGEST_TOKEN = process.env.DISPATCH_TOKEN
+const AUTH_TOKEN = process.env.DISPATCH_TOKEN
 const BUFFER_CAP = 500
 const BODY_LIMIT = 64 * 1024
 const HEARTBEAT_MS = 15000
 const TEXT_DECISIONS = new Set(['reply', 'other', 'answer'])
 const DECISIONS = new Set(['approve', 'deny', 'option', ...TEXT_DECISIONS])
+
+function unauthorized(req) {
+  return AUTH_TOKEN && req.headers.authorization !== `Bearer ${AUTH_TOKEN}`
+}
 
 const clients = new Set()
 const buffer = []
@@ -83,7 +87,7 @@ function openStream(req, res, url) {
 }
 
 async function ingest(req, res) {
-  if (INGEST_TOKEN && req.headers.authorization !== `Bearer ${INGEST_TOKEN}`) return send(res, 401, { error: 'unauthorized' })
+  if (unauthorized(req)) return send(res, 401, { error: 'unauthorized' })
   const body = await readJson(req)
   const events = Array.isArray(body) ? body : [body]
   if (!events.length || !events.every(validEvent)) return send(res, 400, { error: 'expected {type, payload} or an array of them' })
@@ -91,6 +95,7 @@ async function ingest(req, res) {
 }
 
 async function decide(req, res, callId) {
+  if (unauthorized(req)) return send(res, 401, { error: 'unauthorized' })
   const entry = calls.get(callId)
   if (!entry) return send(res, 404, { error: 'unknown call' })
   if (entry.state !== 'ringing') return send(res, 409, { error: `call already ${entry.state}` })

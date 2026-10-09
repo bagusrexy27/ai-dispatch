@@ -72,8 +72,9 @@ Jika forward gagal, emit `call_closed` dengan `reason: "failed"` (atau biarkan c
 ## 5. Keamanan
 
 - Default server: `127.0.0.1` saja.
-- Set `DISPATCH_TOKEN` → Bearer wajib untuk **ingest dan decision**.
-- Jangan kirim API key / `.env` ke browser atau ke log radio.
+- Set `DISPATCH_TOKEN` → Bearer wajib untuk **ingest** dan **POST decision**.
+- UI live: set `VITE_DISPATCH_TOKEN` sama nilainya (lihat [`SETUP.md`](./SETUP.md)).
+- Jangan kirim API key / `.env` ke log radio.
 - Potong path & `errorShort` sebelum emit.
 
 ## 6. Starter di repo
@@ -83,8 +84,10 @@ Jika forward gagal, emit `call_closed` dengan `reason: "failed"` (atau biarkan c
 | `server/fake-agent.js` | End-to-end live tanpa hook proprietary |
 | `adapters/README.md` | Indeks adapter |
 | `adapters/generic-http/` | Skrip POST event generik |
+| `adapters/cursor/` | Hook Cursor (`hooks.json.example`) |
+| `adapters/claude-code/` | Hook Claude Code (`settings.example.json`) |
 
-Adapter Cursor / Claude Code: TBD (lihat roadmap di [`../product/OPEN_SOURCE.md`](../product/OPEN_SOURCE.md)).
+`DISPATCH_GATE=1` membuat shell/Bash menunggu Y/N di markas; tanpa itu adapter hanya observe.
 
 ## 7. Verifikasi cepat
 

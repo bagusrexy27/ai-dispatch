@@ -28,7 +28,8 @@ Setiap adapter:
 | `demo` | Timer in-process (`src/demoFeed.js`) | Wajib di core; first-run OSS |
 | `fake` | `server/fake-agent.js` | Contoh live tanpa hook proprietary |
 | `generic-http` | `adapters/generic-http/` | Starter POST event |
-| `cursor` / `claude-code` | Hook/session log (TBD) | Prioritas berikutnya |
+| `cursor` | `adapters/cursor/` | Hook `hooks.json` → event (+ gate shell opsional) |
+| `claude-code` | `adapters/claude-code/` | Hook settings → event (+ gate Bash opsional) |
 
 Panduan praktis: [`CONNECT_AGENT.md`](./CONNECT_AGENT.md).
 

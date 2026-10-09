@@ -69,3 +69,46 @@ test('stream replays buffered events after the given id', async () => {
   await reader.cancel()
   assert.deepEqual(text.match(/^id: (\d+)/gm), ['id: 1', 'id: 2', 'id: 3', 'id: 4'])
 })
+
+test('DISPATCH_TOKEN guards ingest and decision', async () => {
+  const locked = spawn(process.execPath, ['server/index.js'], {
+    env: { ...process.env, PORT: '0', DISPATCH_TOKEN: 'secret' },
+  })
+  const lockedBase = await new Promise((resolve, reject) => {
+    locked.stdout.on('data', (d) => {
+      const m = String(d).match(/http:\/\/[\d.]+:\d+/)
+      if (m) resolve(m[0])
+    })
+    locked.on('exit', (code) => reject(new Error(`locked server exited ${code}`)))
+  })
+  try {
+    assert.equal((await fetch(`${lockedBase}/v1/events`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'hero_upsert', payload: { hero: { id: 'x' } } }),
+    })).status, 401)
+
+    assert.equal((await fetch(`${lockedBase}/v1/events`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer secret' },
+      body: JSON.stringify({
+        type: 'call_open',
+        payload: { call: { callId: 'auth1', heroId: 'x', kind: 'permission', quote: 'q', quoteSerious: 'q', techLine: 't' } },
+      }),
+    })).status, 202)
+
+    assert.equal((await fetch(`${lockedBase}/v1/calls/auth1/decision`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ decision: 'approve' }),
+    })).status, 401)
+
+    assert.equal((await fetch(`${lockedBase}/v1/calls/auth1/decision`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer secret' },
+      body: JSON.stringify({ decision: 'approve' }),
+    })).status, 202)
+  } finally {
+    locked.kill()
+  }
+})

@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": "node adapters/cursor/hook.mjs"
+      }
+    ],
+    "sessionEnd": [
+      {
+        "command": "node adapters/cursor/hook.mjs"
+      }
+    ],
+    "beforeReadFile": [
+      {
+        "command": "node adapters/cursor/hook.mjs"
+      }
+    ],
+    "afterFileEdit": [
+      {
+        "command": "node adapters/cursor/hook.mjs"
+      }
+    ],
+    "afterShellExecution": [
+      {
+        "command": "node adapters/cursor/hook.mjs"
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "command": "node adapters/cursor/hook.mjs",
+        "timeout": 300,
+        "failClosed": false
+      }
+    ],
+    "stop": [
+      {
+        "command": "node adapters/cursor/hook.mjs"
+      }
+    ]
+  }
+}

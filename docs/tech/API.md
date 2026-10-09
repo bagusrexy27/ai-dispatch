@@ -156,7 +156,8 @@ Saat `answered`, server menyertakan keputusan agar client bisa memindahkan hero:
 | `reply` / `other` / `answer` | `message` non-kosong |
 | `option` | `optionId` |
 
-Respons: `202` + nanti `call_closed` di stream. `409` jika call sudah tertutup. `404` unknown.
+Respons: `202` + nanti `call_closed` di stream. `409` jika call sudah tertutup. `404` unknown.  
+Jika `DISPATCH_TOKEN` diset, header `Authorization: Bearer …` wajib (sama seperti ingest). UI memakai `VITE_DISPATCH_TOKEN`.
 
 ## Snapshot (opsional)
 
