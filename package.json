@@ -7,6 +7,10 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "test": "node --test",
+    "server": "node server/index.js",
+    "dev:live": "vite --mode live",
+    "agent:fake": "node server/fake-agent.js",
     "preview": "vite preview"
   },
   "dependencies": {

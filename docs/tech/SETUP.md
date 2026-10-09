@@ -14,26 +14,32 @@ python -m http.server 9876 --bind 127.0.0.1
 
 Atau buka `mockup.html` langsung (audio `file://` bisa diblokir browser).
 
-## Target app (setelah scaffold)
+## App
 
 ```bash
-pnpm install   # atau npm / bun
-pnpm dev
-pnpm build
-pnpm preview
+npm install
+npm run dev        # mode demo (feeder offline)
+npm test           # reducer, translate, server
+npm run build
 ```
 
-Env usulan:
+## Mode live (SSE)
+
+```bash
+npm run server     # http://127.0.0.1:8787
+npm run dev:live   # Vite memproxy /v1 ke server
+npm run agent:fake # agen palsu: kirim event + buka call + tunggu keputusan
+```
 
 | Var | Arti |
 |-----|------|
-| `VITE_FEED_MODE` | `demo` \| `sse` \| `ws` |
-| `VITE_API_BASE` | base URL backend |
-| `VITE_SFX_DEFAULT` | `0`/`1` |
+| `VITE_FEED_MODE` | `sse` untuk live (sama dengan `--mode live`); default demo |
+| `VITE_API_BASE` | base URL backend jika tidak lewat proxy Vite |
+| `PORT` / `HOST` | server, default `8787` / `127.0.0.1` |
+| `DISPATCH_TOKEN` | jika diset, `POST /v1/events` wajib Bearer token |
+| `DISPATCH_URL` | target proxy Vite & fake agent |
 
-## Backend (opsional)
-
-TBD setelah ADR transport final. Minimal: stream + decision + snapshot.
+Server menyimpan state di memori saja (restart = kosong). Endpoint decision belum diautentikasi; server bind ke localhost.
 
 ## Verifikasi cepat
 

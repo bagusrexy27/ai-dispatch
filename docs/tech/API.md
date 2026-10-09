@@ -132,6 +132,12 @@ Sidekick dilepas dari induk (tali teal hilang). `sidekickId` tak dikenal diabaik
 
 `reason`: `answered` · `failed` · `stale` · `dismissed`.
 
+Saat `answered`, server menyertakan keputusan agar client bisa memindahkan hero:
+
+```json
+{ "callId": "call_…", "reason": "answered", "decision": "option", "optionId": "opt_1", "message": null, "optionLabel": "…" }
+```
+
 ## Decision (client → server)
 
 `POST /v1/calls/{callId}/decision`
@@ -154,7 +160,15 @@ Respons: `202` + nanti `call_closed` di stream. `409` jika call sudah tertutup. 
 
 ## Snapshot (opsional)
 
-`GET /v1/snapshot` → `{ heroes, openCalls, shift }` untuk hydrate awal sebelum catch-up stream.
+`GET /v1/snapshot` → `{ heroes, openCalls, lastEventId }` untuk hydrate awal. Client lalu membuka `GET /v1/stream?since={lastEventId}`; saat reconnect, header `Last-Event-ID` menang atas `since`. Server menyimpan buffer 500 event terakhir untuk replay.
+
+## Ingest (sumber → server)
+
+`POST /v1/events` dengan body `{ "type", "payload" }` atau array-nya (maks 64 KB). Server memberi `id`/`ts` lalu fan-out ke stream. `Authorization: Bearer {DISPATCH_TOKEN}` wajib jika env `DISPATCH_TOKEN` diset. Respons `202 { ids }` · `400` jika bentuk event salah.
+
+## Status call (server → sumber)
+
+`GET /v1/calls/{callId}` → `{ "state": "ringing" | "answered" | …, "decision": { "decision", "optionId", "message" } | null }`. Adapter sumber polling endpoint ini untuk meneruskan keputusan ke agen.
 
 ## Error stream
 
