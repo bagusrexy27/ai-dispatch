@@ -1,84 +1,79 @@
-import { LOCATIONS, MODELS, STAT_LABELS, STATUS } from './lib/status'
+import { StatusLabel, Stamina } from './HeroCard'
+import { LOC_NAMES, STAT_LABELS, STATUS, fmtTok } from './lib/status'
 
-function Radar({ stats }) {
-  const size = 160
-  const c = size / 2
-  const r = 56
+function Radar({ stats, color }) {
+  const R = 60, c = [120, 82]
   const max = Math.max(...stats, 1)
-  const point = (i, scale) => {
-    const angle = (Math.PI * 2 * i) / stats.length - Math.PI / 2
-    return [c + Math.cos(angle) * r * scale, c + Math.sin(angle) * r * scale]
-  }
-  const polygon = stats.map((v, i) => point(i, v / max).join(',')).join(' ')
+  const ang = (i) => -Math.PI / 2 + (i * 2 * Math.PI) / 5
+  const pt = (i, r) => [c[0] + Math.cos(ang(i)) * r, c[1] + Math.sin(ang(i)) * r]
+  const poly = (fn) => STAT_LABELS.map((_, i) => fn(i).map((v) => v.toFixed(1)).join(',')).join(' ')
+  const label = STAT_LABELS.map((a, i) => `${a} ${Math.round((stats[i] / max) * 100)}%`).join(', ')
 
   return (
-    <svg className="radar" viewBox={`0 0 ${size} ${size}`} role="img" aria-label="Radar profil kerja">
-      {[0.33, 0.66, 1].map((s) => (
-        <polygon key={s} points={stats.map((_, i) => point(i, s).join(',')).join(' ')} className="radar-grid" />
-      ))}
-      <polygon points={polygon} className="radar-value" />
-      {STAT_LABELS.map((label, i) => {
-        const [x, y] = point(i, 1.32)
+    <svg className="radar" width="240" height="172" viewBox="0 0 240 172" role="img" aria-label={`Profil kerja: ${label}`}>
+      {[0.33, 0.66, 1].map((f) => <polygon key={f} points={poly((i) => pt(i, R * f))} fill="none" stroke="var(--wire)" strokeOpacity=".5" />)}
+      {STAT_LABELS.map((a, i) => {
+        const [x, y] = pt(i, R), [lx, ly] = pt(i, R + 14)
         return (
-          <text key={label} x={x} y={y} textAnchor="middle" dominantBaseline="middle">
-            {label} {stats[i]}
-          </text>
+          <g key={a}>
+            <line x1={c[0]} y1={c[1]} x2={x} y2={y} stroke="var(--wire)" strokeOpacity=".4" />
+            <text x={lx} y={ly + 3} textAnchor="middle">{a}</text>
+          </g>
         )
       })}
+      <polygon points={poly((i) => pt(i, R * Math.max(0.06, stats[i] / max)))} fill={color} fillOpacity=".35" stroke={color} strokeWidth="2" />
     </svg>
   )
 }
 
-function HeroDetail({ hero, onClose }) {
-  const stamina = 1 - hero.tokensUsed / hero.tokensMax
+function HeroDetail({ hero, traveling, onClose }) {
+  const kid = hero.sidekicks[0]
 
   return (
-    <aside className="detail panel" aria-label={`Detail ${hero.callsign}`}>
+    <aside className="detail box" aria-label={`Detail ${hero.callsign}`}>
       <div className="detail-head">
-        <h2>
-          <span className="badge" style={{ '--badge': MODELS[hero.model]?.color }}>{hero.model}</span> {hero.callsign}
-        </h2>
-        <button type="button" onClick={onClose} aria-label="Tutup detail">Tutup <kbd>Esc</kbd></button>
+        <span className={`badge lg m-${hero.model}`} aria-label={`model ${hero.model}`}>{hero.model}</span>
+        <div className="detail-title">
+          <h3 className="display">{hero.callsign}</h3>
+          <div className="mono detail-meta">{hero.sessionId} · {hero.model} {hero.variant}</div>
+        </div>
+        <button type="button" className="close" aria-label="Tutup" onClick={onClose}>×</button>
       </div>
-      <dl>
-        <dt>Status</dt><dd className={`status status-${hero.status}`}>{STATUS[hero.status].label}</dd>
-        <dt>Lokasi</dt><dd>{LOCATIONS[hero.loc].label}</dd>
-        <dt>Tugas</dt><dd>{hero.task}</dd>
-        <dt>Repo</dt><dd className="mono">{hero.project} @ {hero.branch}</dd>
-        <dt>Model</dt><dd>{MODELS[hero.model]?.name} {hero.variant}</dd>
-        <dt>Sesi</dt><dd className="mono">{hero.sessionId}</dd>
-        <dt>Budget</dt><dd className="mono">${hero.costUsd.toFixed(3)}</dd>
-        <dt>Stamina</dt>
-        <dd>
-          <span className="bar"><span style={{ width: `${stamina * 100}%` }} /></span>
-          <span className="mono muted">{hero.tokensUsed.toLocaleString('id-ID')} / {hero.tokensMax.toLocaleString('id-ID')} token</span>
-        </dd>
-      </dl>
-      <Radar stats={hero.stats} />
-      <h3>Sidekick</h3>
-      {hero.sidekicks.length ? (
-        <ul className="files">
-          {hero.sidekicks.map((s) => (
-            <li key={s.id}>
-              <span className="sidekick-count">{s.callsign}</span> <span className={`status status-${s.status}`}>{STATUS[s.status].label}</span> {s.task}
-            </li>
-          ))}
+      <div className="detail-body">
+        <div className="section">Profil kerja · 1 jam terakhir</div>
+        <Radar stats={hero.stats} color={STATUS[hero.status].color} />
+        <dl>
+          <dt>Status</dt><dd><StatusLabel hero={hero} traveling={traveling} /></dd>
+          <dt>Lokasi</dt><dd>{LOC_NAMES[hero.loc]}</dd>
+          <dt>Misi</dt><dd>{hero.task}</dd>
+          <dt>Project</dt><dd className="mono">{hero.project}</dd>
+          <dt>Branch</dt><dd className="mono">{hero.branch}</dd>
+          <dt>Stamina</dt>
+          <dd>
+            <Stamina hero={hero} />
+            <span className="mono muted small">{fmtTok(hero.tokensUsed)} / {fmtTok(hero.tokensMax)} tok</span>
+          </dd>
+          <dt>Biaya</dt><dd className="mono">${hero.costUsd.toFixed(2)}</dd>
+          {kid && (
+            <>
+              <dt>Sidekick</dt>
+              <dd><span className="display sidekick-name">{kid.callsign}</span> di {LOC_NAMES[kid.loc]} — {kid.task}</dd>
+            </>
+          )}
+        </dl>
+        <div className="section">File disentuh</div>
+        <ul className="files mono">
+          {hero.files.length
+            ? hero.files.toReversed().map((f, i) => <li key={i}><span className={`k k-${f.op}`}>{f.op}</span>{f.path}</li>)
+            : <li className="muted">—</li>}
         </ul>
-      ) : <p className="muted">Kerja sendirian.</p>}
-      <h3>File terakhir</h3>
-      {hero.files.length ? (
-        <ul className="mono files">
-          {hero.files.toReversed().map((f, i) => (
-            <li key={i}><span className={`op op-${f.op}`}>{f.op}</span> {f.path}</li>
-          ))}
+        <div className="section">Riwayat misi</div>
+        <ul className="files mono">
+          {hero.history.length
+            ? hero.history.toReversed().map((x, i) => <li key={i} className={x.startsWith('✓') ? 'ok' : 'fail'}>{x}</li>)
+            : <li className="muted">—</li>}
         </ul>
-      ) : <p className="muted">Belum ada file disentuh.</p>}
-      <h3>Riwayat</h3>
-      {hero.history.length ? (
-        <ul className="mono files">
-          {hero.history.toReversed().map((h, i) => <li key={i}>{h}</li>)}
-        </ul>
-      ) : <p className="muted">Belum ada commit/error.</p>}
+      </div>
     </aside>
   )
 }

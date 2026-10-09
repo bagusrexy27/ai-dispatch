@@ -2,130 +2,172 @@ import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
 import Header from './Header'
 import HeroCard from './HeroCard'
 import HeroDetail from './HeroDetail'
-import FilterBar from './FilterBar'
 import RadioLog from './RadioLog'
 import IncomingCall from './IncomingCall'
 import MapView from './MapView'
-import { applyEvent, initialWorld } from './world'
+import { applyEvent, createWorld } from './world'
 import { startDemoFeed } from './demoFeed'
-import { ring } from './lib/sfx'
+import { startSseFeed, sendDecision } from './ingest/sseFeed'
+import demoHeroes from './heroes'
+import { setMusic, setSfx, sfx } from './lib/sfx'
 import { STATUS } from './lib/status'
 import './App.css'
 
-const MAX_VISIBLE_CALLS = 3
-const PREFS_KEY = 'ai-dispatch:prefs'
+const PREFS_KEY = 'ai-dispatch:serious'
+const FEED_MODE = import.meta.env.VITE_FEED_MODE === 'sse' || import.meta.env.MODE === 'live' ? 'sse' : 'demo'
+const API_BASE = import.meta.env.VITE_API_BASE ?? ''
+const DEMO_HEROES = createWorld(demoHeroes).heroes
+const DEMO_SEND_MS = 800
+const CLOSING_MS = 2000
+const EVENT_SFX = { call_open: 'ring', commit: 'thunk', error: 'buzz' }
+const QUIET = new Set(['token_usage', 'cost', 'call_state', 'hero_upsert'])
 
-const filters = [
-  { id: 'ALL', label: 'Semua Hero' },
-  ...Object.entries(STATUS).map(([id, s]) => ({ id, label: s.label })),
-]
-
-function loadPrefs() {
-  try {
-    return { feed: true, serious: false, sfx: false, ...JSON.parse(localStorage.getItem(PREFS_KEY)) }
-  } catch {
-    return { feed: true, serious: false, sfx: false }
-  }
+const SENT = {
+  approve: () => 'disetujui',
+  deny: () => 'ditolak',
+  option: (x) => `opsi ${x.optionId} — ${x.optionLabel}`,
+  other: (x) => `jawaban custom — "${x.message}"`,
+  answer: (x) => `jawaban — "${x.message}"`,
+  reply: (x) => `dibalas — "${x.message}"`,
 }
+const sentLine = (decision, extra) => `Terkirim: ${SENT[decision](extra)}`
 
 function App() {
-  const [world, dispatchWorld] = useReducer(applyEvent, initialWorld)
+  const [world, dispatchWorld] = useReducer(applyEvent, FEED_MODE === 'demo' ? demoHeroes : [], createWorld)
+  const [connection, setConnection] = useState(FEED_MODE === 'demo' ? 'demo' : 'connecting')
   const [selected, setSelected] = useState(null)
-  const [filter, setFilter] = useState('ALL')
-  const [query, setQuery] = useState('')
-  const [prefs, setPrefs] = useState(loadPrefs)
+  const [traveling, setTraveling] = useState(() => new Set())
+  const [closing, setClosing] = useState(null)
+  const [prefs, setPrefs] = useState(() => ({ serious: localStorage.getItem(PREFS_KEY) === '1', sfx: false, music: false }))
+  const worldRef = useRef(world)
   const callPanelRef = useRef(null)
-  const sfxRef = useRef(prefs.sfx)
 
   useEffect(() => {
-    sfxRef.current = prefs.sfx
-    localStorage.setItem(PREFS_KEY, JSON.stringify(prefs))
+    worldRef.current = world
+  })
+
+  useEffect(() => {
+    localStorage.setItem(PREFS_KEY, prefs.serious ? '1' : '0')
+    setSfx(prefs.sfx)
+    setMusic(prefs.music)
   }, [prefs])
 
+  useEffect(() => () => setMusic(false), [])
+
   const dispatch = useCallback((ev) => {
-    if (ev.type === 'call_open' && sfxRef.current) ring()
+    sfx(EVENT_SFX[ev.type] ?? (QUIET.has(ev.type) ? null : 'krrk'))
     dispatchWorld({ at: Date.now(), ...ev })
   }, [])
 
   useEffect(() => {
-    if (!prefs.feed) return
-    return startDemoFeed(initialWorld.heroes, dispatch)
-  }, [prefs.feed, dispatch])
+    if (FEED_MODE === 'sse') return startSseFeed(API_BASE, dispatch, setConnection)
+    return startDemoFeed(DEMO_HEROES, dispatch, () => worldRef.current)
+  }, [dispatch])
+
+  const onTravelChange = useCallback((id, moving) => {
+    if (moving) sfx('whoosh')
+    setTraveling((prev) => {
+      if (prev.has(id) === moving) return prev
+      const next = new Set(prev)
+      if (moving) next.add(id)
+      else next.delete(id)
+      return next
+    })
+  }, [])
 
   const { heroes, calls, log } = world
-  const visibleHeroes = heroes.filter((h) => {
-    const matchQuery = h.callsign.toLowerCase().includes(query.toLowerCase())
-    const matchFilter = filter === 'ALL' || h.status === filter
-    return matchFilter && matchQuery
-  })
+  const roster = heroes.toSorted((a, b) => STATUS[a.status].order - STATUS[b.status].order)
   const selectedHero = heroes.find((h) => h.id === selected)
+  const activeCall = closing?.call ?? calls[0]
+  const callHero = closing?.hero ?? heroes.find((h) => h.id === activeCall?.heroId)
 
-  function handleAnswer(call, decision, extra) {
-    dispatch({ type: 'call_result', heroId: call.heroId, callId: call.callId, decision, ...extra })
+  function close(call, hero, line) {
+    setClosing({ call, hero, line })
+    setTimeout(() => setClosing(null), CLOSING_MS)
+  }
+
+  async function handleAnswer(call, decision, extra) {
+    const { callId } = call
+    const hero = heroes.find((h) => h.id === call.heroId)
+    sfx('click')
+    dispatch({ type: 'call_state', callId, state: 'sending' })
+
+    if (FEED_MODE === 'demo') {
+      setTimeout(() => {
+        close({ ...call, state: 'answered' }, hero, sentLine(decision, extra))
+        dispatch({ type: 'call_result', callId, decision, ...extra })
+      }, DEMO_SEND_MS)
+      return
+    }
+    try {
+      await sendDecision(API_BASE, callId, { decision, optionId: extra.optionId ?? null, message: extra.message ?? null })
+      close({ ...call, state: 'answered' }, hero, sentLine(decision, extra))
+    } catch (err) {
+      dispatch({ type: 'notice', level: 'warn', text: err.message })
+      dispatch(err.status === 409 ? { type: 'call_closed', callId, reason: 'stale' } : { type: 'call_state', callId, state: 'failed' })
+    }
+  }
+
+  function focusCall() {
+    if (!callPanelRef.current) return
+    callPanelRef.current.focus()
+    if (activeCall) setSelected(activeCall.heroId)
   }
 
   useEffect(() => {
     function onKeyDown(e) {
       if (e.target.closest('input, textarea, select')) return
       if (e.key === 'Escape') setSelected(null)
-      else if (e.code === 'Space' && callPanelRef.current) {
+      else if (e.code === 'Space') {
         e.preventDefault()
-        callPanelRef.current.focus()
+        focusCall()
       } else if (/^[1-9]$/.test(e.key)) {
-        const hero = visibleHeroes[Number(e.key) - 1]
+        const hero = roster[Number(e.key) - 1]
         if (hero) setSelected(hero.id)
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [visibleHeroes])
+  })
 
   return (
     <div className="app">
-      <Header heroes={heroes} prefs={prefs} onToggle={(key) => setPrefs((p) => ({ ...p, [key]: !p[key] }))} />
+      <Header
+        heroes={heroes}
+        done={world.done}
+        callCount={calls.length}
+        connection={connection}
+        prefs={prefs}
+        onToggle={(key) => setPrefs((p) => ({ ...p, [key]: !p[key] }))}
+        onCallsClick={focusCall}
+      />
 
-      <div className="stage">
-        <MapView heroes={heroes} log={log} selected={selected} onSelect={setSelected} />
-
-        <div className="side">
-          <section className="calls" aria-label="Panggilan masuk">
-            {calls.length === 0 ? (
-              <p className="muted panel calls-empty">Tidak ada panggilan. Markas tenang.</p>
-            ) : (
-              <>
-                <p className="calls-hint muted"><kbd>Space</kbd> fokus panggilan · <kbd>Y</kbd>/<kbd>N</kbd>/<kbd>R</kbd> · <kbd>1</kbd>-<kbd>9</kbd></p>
-                {calls.slice(0, MAX_VISIBLE_CALLS).map((call, i) => (
-                  <IncomingCall
-                    key={call.callId}
-                    call={call}
-                    hero={heroes.find((h) => h.id === call.heroId)}
-                    serious={prefs.serious}
-                    onAnswer={handleAnswer}
-                    panelRef={i === 0 ? callPanelRef : undefined}
-                  />
-                ))}
-                {calls.length > MAX_VISIBLE_CALLS && <p className="muted">+{calls.length - MAX_VISIBLE_CALLS} panggilan antre</p>}
-              </>
-            )}
-          </section>
-          <RadioLog log={log} serious={prefs.serious} />
-        </div>
+      <div className="side">
+        {activeCall && callHero && (
+          <IncomingCall
+            key={activeCall.callId}
+            call={activeCall}
+            hero={callHero}
+            serious={prefs.serious}
+            closing={closing}
+            queued={Math.max(0, calls.length - (closing ? 0 : 1))}
+            onAnswer={handleAnswer}
+            panelRef={callPanelRef}
+          />
+        )}
+        <RadioLog log={log} serious={prefs.serious} />
       </div>
 
-      <section className="roster-wrap" aria-label="Roster hero">
-        <div className="roster-tools">
-          <FilterBar filter={filter} setFilter={setFilter} filters={filters} />
-          <input type="search" placeholder="Cari hero" value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Cari hero" />
-        </div>
-        <div className="roster">
-          {visibleHeroes.map((hero, i) => (
-            <HeroCard key={hero.id} hero={hero} index={i} selected={selected} onSelect={setSelected} />
-          ))}
-          {visibleHeroes.length === 0 && <p className="muted">Tidak ada hero yang cocok dengan pencarian.</p>}
-        </div>
-      </section>
+      <MapView heroes={heroes} log={log} selected={selected} traveling={traveling} onSelect={setSelected} onTravelChange={onTravelChange}>
+        {selectedHero && <HeroDetail key={selectedHero.id} hero={selectedHero} traveling={traveling.has(selectedHero.id)} onClose={() => setSelected(null)} />}
+      </MapView>
 
-      {selectedHero && <HeroDetail hero={selectedHero} onClose={() => setSelected(null)} />}
+      <nav className="roster" aria-label="Roster hero">
+        {roster.length === 0 && <p className="muted roster-empty">Belum ada hero terhubung ke markas.</p>}
+        {roster.map((hero, i) => (
+          <HeroCard key={hero.id} hero={hero} index={i} selected={selected === hero.id} traveling={traveling.has(hero.id)} onSelect={setSelected} />
+        ))}
+      </nav>
     </div>
   )
 }

@@ -1,88 +1,100 @@
-const FILES = {
-  'one-bff-go': ['internal/middleware/auth.go', 'internal/middleware/logger.go', 'api/openapi.yaml', 'cmd/server/main.go'],
-  'ops-keuangan': ['go.mod', 'go.sum', 'internal/ledger/posting.go', 'internal/ledger/posting_test.go'],
-  'documents-service': ['internal/upload/handler.go', 'docs/contract-upload.md', 'internal/storage/s3.go'],
-}
-
-const COMMITS = ['refactor: split auth middleware', 'chore: tidy go modules', 'fix: limit upload size', 'docs: update contract', 'test: cover posting rounding']
-
-const ERRORS = ['go test ./... exit 1', 'lint: unused variable ctx', 'timeout calling staging API', 'merge conflict di go.sum']
-
 const CALLS = [
   {
-    kind: 'permission',
-    quote: 'Boss, boleh jalankan perintah ini? Janji nggak ngapa-ngapain kok.',
-    quoteSerious: 'Meminta izin menjalankan perintah shell.',
-    techLine: 'go mod tidy && go build ./...',
+    kind: 'permission', heroId: 'byte',
+    quote: 'Boss, saya mau jalankan `go mod tidy`. Ini bakal ngubah go.sum. Boleh?',
+    quoteSerious: 'Byte meminta izin menjalankan perintah berikut.',
+    techLine: 'perintah: go mod tidy\ncwd: operational-keuangan-service\nefek: mengubah go.mod, go.sum',
   },
   {
-    kind: 'permission',
-    quote: 'Boss, aku mau hapus folder build lama. Aman kan?',
-    quoteSerious: 'Meminta izin menghapus direktori.',
-    techLine: 'rm -rf ./dist',
-  },
-  {
-    kind: 'choose',
-    quote: 'Boss, ada dua jalan nih. Pilih yang mana?',
-    quoteSerious: 'Membutuhkan keputusan pendekatan implementasi.',
-    techLine: 'Strategi validasi ukuran upload',
+    kind: 'choose', heroId: 'nova',
+    quote: 'Boss, kontrak header X-User-* versi mana yang saya ikuti? Pilih satu.',
+    quoteSerious: 'Nova meminta pilihan kontrak API.',
+    techLine: 'konteks: review feat/identity-v2\nfile: docs/api-contract.md',
     options: [
-      { id: 'mw', label: 'Validasi di middleware' },
-      { id: 'handler', label: 'Validasi di handler' },
-      { id: 'proxy', label: 'Batasi di reverse proxy' },
+      { id: 'a', label: 'Ikuti draft BFF terbaru (X-User-ID + Email + Name)' },
+      { id: 'b', label: 'Tetap kontrak lama (hanya X-User-ID)' },
+      { id: 'c', label: 'Tunda review — tunggu ADR selesai' },
     ],
   },
   {
-    kind: 'ask',
-    quote: 'Boss, env staging pakai database yang mana sih?',
-    quoteSerious: 'Membutuhkan informasi konfigurasi.',
-    techLine: 'DATABASE_URL tidak ditemukan di .env.staging',
+    kind: 'ask', heroId: 'ivy',
+    quote: 'Boss, path upload dokumen yang dipakai yang mana? Saya bingung antara dua handler.',
+    quoteSerious: 'Ivy menanyakan path upload yang benar.',
+    techLine: 'repo: documents-service\nkandidat:\n  · POST /upload\n  · POST /v1/documents',
+  },
+  {
+    kind: 'permission', heroId: 'kilo',
+    quote: 'Test-nya merah terus. Saya boleh hapus test yang flaky?',
+    quoteSerious: 'Kilo meminta izin menghapus file test.',
+    techLine: 'aksi: hapus file\npath: app/service/realisasi_flaky_test.go',
   },
 ]
 
-const SIDEKICK_TASKS = ['tulis tes', 'cari pemakaian fungsi', 'cek lint', 'baca changelog dependency']
-const MAX_SIDEKICKS = 2
+const SCRIPT = [
+  { type: 'status', heroId: 'ivy', status: 'coding' },
+  { type: 'commit', heroId: 'rex', sha: 'b7e21d0', message: 'identity: baca X-User-Email' },
+  { type: 'status', heroId: 'kilo', status: 'coding' },
+  { type: 'read', heroId: 'rex', file: 'internal/middleware/auth_test.go' },
+  { type: 'status', heroId: 'nova', status: 'reading' },
+  { type: 'status', heroId: 'mochi', status: 'reading' },
+  { type: 'error', heroId: 'kilo', error: 'FAIL TestRounding' },
+  { type: 'edit', heroId: 'byte', file: 'go.sum' },
+  { type: 'status', heroId: 'ivy', status: 'idle' },
+  { type: 'status', heroId: 'nova', status: 'talking', radioTo: 'rex' },
+  { type: 'commit', heroId: 'byte', sha: 'c0ffee1', message: 'bump go-common' },
+  { type: 'status', heroId: 'mochi', status: 'idle' },
+  { type: 'status', heroId: 'kilo', status: 'waiting' },
+  { type: 'edit', heroId: 'rex', file: 'internal/middleware/identity.go' },
+  { type: 'status', heroId: 'ivy', status: 'reading' },
+]
 
-const pick = (list) => list[Math.floor(Math.random() * list.length)]
-const sha = () => Math.random().toString(16).slice(2, 9)
+const SIDEKICK = { id: 'rex-sub1', callsign: 'Rex-2', status: 'reading', loc: 'investigate' }
+const TICK_MS = 3800
+const CALL_GAP_MS = 10000
 
-function primaryEvent(hero) {
-  const heroId = hero.id
-  const r = Math.random()
-  if (r < 0.08) return { type: 'call_open', heroId, call: { ...pick(CALLS), callId: `call-${Date.now()}-${heroId}`, startedAt: Date.now() } }
-  if (r < 0.35) return { type: 'read', heroId, file: pick(FILES[hero.project]) }
-  if (r < 0.6) return { type: 'edit', heroId, file: pick(FILES[hero.project]) }
-  if (r < 0.7) return { type: 'commit', heroId, sha: sha(), message: pick(COMMITS) }
-  if (r < 0.78) return { type: 'error', heroId, error: pick(ERRORS) }
-  return { type: 'status', heroId, status: pick(['talking', 'waiting', 'idle', 'coding']) }
-}
+/* demo deterministik: semua hero mulai di HQ, berangkat bergiliran, lalu skrip berputar */
+export function startDemoFeed(heroes, dispatch, getWorld) {
+  const timers = []
+  const later = (ms, fn) => timers.push(setTimeout(fn, ms))
+  const usage = Object.fromEntries(heroes.map((h) => [h.id, { used: h.tokensUsed, cost: h.costUsd, max: h.tokensMax }]))
+  let step = 0
+  let callIdx = 0
+  let quietSince = Date.now()
 
-function sidekickEvent(hero, subs, counter) {
-  const r = Math.random()
-  if (subs.length < MAX_SIDEKICKS && r < 0.07) {
-    const n = ++counter[hero.id]
-    const status = pick(['coding', 'reading'])
-    const sidekick = { id: `${hero.id}-sub${n}`, callsign: `${hero.callsign}-${n + 1}`, status, loc: status === 'coding' ? 'coding' : 'investigate' }
-    subs.push(sidekick)
-    return { type: 'delegate', heroId: hero.id, sidekick, task: pick(SIDEKICK_TASKS) }
+  heroes.filter((h) => h.target !== h.status).forEach((h, i) => {
+    later(400 + i * 450, () => dispatch({ type: 'status', heroId: h.id, status: h.target, radioTo: h.radioTo }))
+  })
+  later(2200, () => dispatch({ type: 'delegate', heroId: 'rex', sidekick: SIDEKICK, task: 'cari pola test middleware' }))
+  later(4600, openCall)
+
+  function openCall() {
+    const tpl = CALLS[callIdx++ % CALLS.length]
+    dispatch({ type: 'call_open', heroId: tpl.heroId, call: { ...tpl, callId: `call-${Date.now()}`, startedAt: Date.now() } })
   }
-  if (subs.length && r > 0.93) {
-    const [done] = subs.splice(Math.floor(Math.random() * subs.length), 1)
-    return { type: 'sidekick_end', heroId: hero.id, sidekickId: done.id, sidekickCallsign: done.callsign }
-  }
-  return null
-}
 
-export function startDemoFeed(heroes, dispatch, intervalMs = 2200) {
-  const used = Object.fromEntries(heroes.map((h) => [h.id, h.tokensUsed]))
-  const subs = Object.fromEntries(heroes.map((h) => [h.id, []]))
-  const counter = Object.fromEntries(heroes.map((h) => [h.id, 0]))
-  const id = setInterval(() => {
-    const hero = pick(heroes)
-    used[hero.id] = Math.min(used[hero.id] + 1500 + Math.floor(Math.random() * 4000), hero.tokensMax)
-    dispatch(sidekickEvent(hero, subs[hero.id], counter) ?? primaryEvent(hero))
-    dispatch({ type: 'token_usage', heroId: hero.id, used: used[hero.id], max: hero.tokensMax })
-    dispatch({ type: 'cost', heroId: hero.id, usd: Math.random() * 0.02 })
-  }, intervalMs)
-  return () => clearInterval(id)
+  function tick() {
+    const world = getWorld()
+    if (world.calls.length) quietSince = Date.now()
+    else if (Date.now() - quietSince > CALL_GAP_MS) {
+      quietSince = Date.now()
+      return openCall()
+    }
+
+    const ev = SCRIPT[step++ % SCRIPT.length]
+    const hero = world.heroes.find((h) => h.id === ev.heroId)
+    if (!hero || hero.status === 'attention') return
+    dispatch(ev)
+
+    const u = usage[hero.id]
+    u.used = Math.min(u.used + 2000 + ((step * 1300) % 5000), u.max)
+    u.cost += 0.01
+    dispatch({ type: 'token_usage', heroId: hero.id, used: u.used, max: u.max })
+    dispatch({ type: 'cost', heroId: hero.id, costUsd: u.cost })
+  }
+
+  const interval = setInterval(tick, TICK_MS)
+  return () => {
+    clearInterval(interval)
+    timers.forEach(clearTimeout)
+  }
 }

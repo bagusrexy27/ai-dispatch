@@ -1,17 +1,49 @@
-import { formatClock, logLine } from './lib/copy'
+import { useLayoutEffect, useRef } from 'react'
+import { formatClock, logParts } from './lib/copy'
+
+const VISIBLE = 80
+const STICK_PX = 30
+
+export function Rich({ parts }) {
+  return parts.map((p, i) => (typeof p === 'string' ? p : <code key={i}>{p.code}</code>))
+}
+
+function LogLine({ entry, serious }) {
+  const parts = logParts(entry, serious)
+  if (!parts) return null
+  return (
+    <li>
+      <span className="t mono">{formatClock(entry.at)}</span>
+      {entry.model && <span className={`badge sm m-${entry.model}`} aria-label={`model ${entry.model}`}>{entry.model}</span>}
+      <span className={parts.tone}>
+        {parts.prefix}
+        <span className="cs" style={parts.whoColor ? { color: parts.whoColor } : undefined}>{parts.who}</span>
+        <Rich parts={parts.text} />
+      </span>
+    </li>
+  )
+}
 
 function RadioLog({ log, serious }) {
+  const listRef = useRef(null)
+  const stick = useRef(true)
+
+  useLayoutEffect(() => {
+    if (stick.current) listRef.current.scrollTop = listRef.current.scrollHeight
+  }, [log])
+
+  function onScroll() {
+    const ul = listRef.current
+    stick.current = ul.scrollHeight - ul.scrollTop - ul.clientHeight < STICK_PX
+  }
+
   return (
-    <section className="radio-log panel" aria-label="Radio log">
-      <h2>Radio Log</h2>
-      {log.length === 0 && <p className="muted">Markas online. Menunggu hero...</p>}
-      <ol aria-live="polite">
-        {log.toReversed().map((e) => (
-          <li key={e.id} className={`log-${e.type}`}>
-            <span className="mono muted">{formatClock(e.at)}</span> {logLine(e, serious)}
-          </li>
-        ))}
-      </ol>
+    <section className="log box" aria-label="Radio log">
+      <div className="panel-title"><span className="live" aria-hidden="true" />Radio log</div>
+      <ul ref={listRef} className="log-list" aria-live="polite" onScroll={onScroll}>
+        {log.length === 0 && <li className="muted">Frekuensi sepi. Terlalu sepi.</li>}
+        {log.slice(-VISIBLE).map((e) => <LogLine key={e.id} entry={e} serious={serious} />)}
+      </ul>
     </section>
   )
 }

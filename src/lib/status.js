@@ -1,26 +1,27 @@
-export const LOCATIONS = {
-  hq: { label: 'HQ', x: 400, y: 225 },
-  coding: { label: 'Bengkel Kode', x: 150, y: 95 },
-  radio: { label: 'Menara Radio', x: 650, y: 95 },
-  investigate: { label: 'Perpustakaan', x: 150, y: 355 },
-  standby: { label: 'Ruang Tunggu', x: 650, y: 355 },
-  dock: { label: 'Dermaga Kirim', x: 400, y: 410 },
+export const STATUS = {
+  attention: { label: 'Nelpon markas', color: 'var(--alert)', order: 0, loc: null },
+  coding: { label: 'On mission', color: 'var(--st-mission)', order: 1, loc: 'coding' },
+  reading: { label: 'Menyelidiki', color: 'var(--st-investigate)', order: 2, loc: 'investigate' },
+  talking: { label: 'Di radio', color: 'var(--st-radio)', order: 3, loc: 'radio' },
+  waiting: { label: 'Standby', color: 'var(--st-standby)', order: 4, loc: 'standby' },
+  idle: { label: 'Di markas', color: 'var(--st-idle)', order: 5, loc: 'hq' },
 }
 
-export const STATUS = {
-  coding: { label: 'ON MISSION', loc: 'coding' },
-  reading: { label: 'MENYELIDIKI', loc: 'investigate' },
-  talking: { label: 'DI RADIO', loc: 'radio' },
-  waiting: { label: 'STANDBY', loc: 'standby' },
-  idle: { label: 'DI MARKAS', loc: 'hq' },
-  attention: { label: 'NELPON MARKAS', loc: null },
+export const LOC_NAMES = {
+  hq: 'HQ',
+  coding: 'Bengkel Kode',
+  radio: 'Menara Radio',
+  investigate: 'Perpustakaan',
+  standby: 'Ruang Tunggu',
+  dock: 'Dermaga Kirim',
 }
 
 export const STAT_LABELS = ['Coding', 'Membaca', 'Koordinasi', 'Menunggu', 'Shipping']
 
-export const MODELS = {
-  CL: { name: 'Claude', color: '#e8875b' },
-  GP: { name: 'GPT', color: '#5bc8a8' },
-  GM: { name: 'Gemini', color: '#6b9cf0' },
-  GR: { name: 'Grok', color: '#c9c9d4' },
+export const MODEL_BG = { CL: '#e9a36b', GP: '#9be3c7', GM: '#a9b8ff', GK: '#d6d6d6' }
+
+export const KIND_TAG = { permission: 'IZIN', choose: 'PILIH', ask: 'TANYA' }
+
+export function fmtTok(n) {
+  return n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : Math.round(n / 1000) + 'k'
 }

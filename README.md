@@ -13,6 +13,16 @@ npm run build
 
 Tanpa backend: **Demo feed** (toggle di header) menghasilkan event palsu secara offline.
 
+Dengan agen sungguhan (SSE):
+
+```bash
+npm run server      # backend kecil tanpa dependency, http://127.0.0.1:8787
+npm run dev:live    # UI tersambung ke /v1/stream
+npm run agent:fake  # contoh agen: kirim event, nelpon markas, tunggu keputusan
+```
+
+Agen/adapter mengirim event ke `POST /v1/events` dan membaca keputusan dari `GET /v1/calls/{callId}`. Kontrak lengkap di [`docs/tech/API.md`](docs/tech/API.md), runbook di [`docs/tech/SETUP.md`](docs/tech/SETUP.md).
+
 ## Shortcut
 
 | Tombol | Aksi |
@@ -30,6 +40,9 @@ Tanpa backend: **Demo feed** (toggle di header) menghasilkan event palsu secara 
 |------|-----|
 | `src/world.js` | State dunia + reducer `applyEvent` (satu-satunya jalur update) |
 | `src/demoFeed.js` | Feeder event offline |
+| `src/ingest/` | Klien SSE + `translate` event wire → event reducer |
+| `server/` | Server stream/decision/ingest + agen palsu |
+| `test/` | `node --test` untuk reducer, translate, server |
 | `src/MapView.jsx` | Peta kota, perjalanan via HQ, sidekick, stempel, paket commit |
 | `src/IncomingCall.jsx` | Panel panggilan `permission` · `choose` · `ask` |
 | `src/lib/status.js` | Status, lokasi, badge model |
