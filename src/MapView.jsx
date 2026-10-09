@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { LOCS } from './map/geometry'
+import { LOCS, MAP_ZOOM_MAX, MAP_ZOOM_MIN } from './map/geometry'
 import { renderCity } from './map/city'
 import { createAnimator } from './map/animator'
 import { MODEL_BG, STATUS } from './lib/status'
@@ -8,10 +8,46 @@ import { FaceImage } from './HeroFace'
 
 const CITY = renderCity()
 const STAMPS = { commit: ['Beres!', 'var(--ok)'], error: ['Waduh', 'var(--fail)'] }
+const DEFAULT_CX = 0
+const DEFAULT_CY = -30
 
-function fitViewBox(width, height) {
-  const vw = Math.max(1000, Math.min(1150, width * 1.05)), vh = (vw * height) / width
-  return { viewBox: `${-vw / 2} ${-vh / 2 - 30} ${vw} ${vh}`, top: -vh / 2 - 30 }
+function fitBase(width, height) {
+  const vw = Math.max(1000, Math.min(1150, width * 1.05))
+  const vh = (vw * height) / width
+  return { vw, vh }
+}
+
+/** Scope peta = apa yang terlihat di MAP_ZOOM_MIN (0.8×). Di situ pan mentok. */
+function scopeBounds(vw, vh) {
+  const w = vw / MAP_ZOOM_MIN
+  const h = vh / MAP_ZOOM_MIN
+  return {
+    minX: DEFAULT_CX - w / 2,
+    maxX: DEFAULT_CX + w / 2,
+    minY: DEFAULT_CY - h / 2,
+    maxY: DEFAULT_CY + h / 2,
+  }
+}
+
+function clampCamera(cx, cy, zoom, vw, vh) {
+  const z = Math.min(MAP_ZOOM_MAX, Math.max(MAP_ZOOM_MIN, zoom))
+  const viewW = vw / z
+  const viewH = vh / z
+  const { minX, minY, maxX, maxY } = scopeBounds(vw, vh)
+  const halfW = viewW / 2
+  const halfH = viewH / 2
+  const xMin = minX + halfW
+  const xMax = maxX - halfW
+  const yMin = minY + halfH
+  const yMax = maxY - halfH
+  // Di zoom min, xMin≈xMax → pan terkunci di pusat scope
+  return {
+    zoom: z,
+    cx: Math.min(xMax, Math.max(xMin, cx)),
+    cy: Math.min(yMax, Math.max(yMin, cy)),
+    viewW,
+    viewH,
+  }
 }
 
 function toEntities(heroes) {
@@ -60,6 +96,7 @@ function MapHero({ hero, model, sidekick, traveling, selected, onSelect, nodeRef
       aria-label={`${hero.callsign}: ${STATUS[hero.status].label}`}
       onClick={onSelect}
       onKeyDown={(e) => e.key === 'Enter' && onSelect()}
+      onPointerDown={(e) => e.stopPropagation()}
     >
       <circle className="sel" r={r + 7} />
       {attention && <circle className="ring-alert" r={r + 1} />}
@@ -81,13 +118,21 @@ function MapHero({ hero, model, sidekick, traveling, selected, onSelect, nodeRef
 
 function MapView({ heroes, log, selected, traveling, onSelect, onTravelChange, children }) {
   const wrapRef = useRef(null)
+  const svgRef = useRef(null)
   const linksRef = useRef(null)
   const trailsRef = useRef(null)
   const fxRef = useRef(null)
+  const dragRef = useRef(null)
+  const camRef = useRef({ cx: DEFAULT_CX, cy: DEFAULT_CY, zoom: 1 })
   const [anim] = useState(createAnimator)
-  const [fit, setFit] = useState(() => fitViewBox(1000, 600))
+  const [base, setBase] = useState(() => fitBase(1000, 600))
+  const [cam, setCam] = useState(() => clampCamera(DEFAULT_CX, DEFAULT_CY, 1, 1050, 630))
   const lastLogId = useRef(log.at(-1)?.id ?? 0)
   const entities = toEntities(heroes)
+
+  useEffect(() => {
+    camRef.current = cam
+  }, [cam])
 
   useLayoutEffect(() => {
     anim.mount({ links: linksRef.current, trails: trailsRef.current, fx: fxRef.current })
@@ -95,14 +140,17 @@ function MapView({ heroes, log, selected, traveling, onSelect, onTravelChange, c
   }, [anim])
 
   useLayoutEffect(() => {
-    anim.configure({ onTravel: onTravelChange, mapTop: fit.top })
+    anim.configure({ onTravel: onTravelChange, mapTop: cam.cy - cam.viewH / 2 })
     anim.sync(entities)
   })
 
   useEffect(() => {
     const ro = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect
-      if (width) setFit(fitViewBox(width, height))
+      if (!width) return
+      const next = fitBase(width, height)
+      setBase(next)
+      setCam((c) => clampCamera(c.cx, c.cy, c.zoom, next.vw, next.vh))
     })
     ro.observe(wrapRef.current)
     return () => ro.disconnect()
@@ -117,9 +165,95 @@ function MapView({ heroes, log, selected, traveling, onSelect, onTravelChange, c
     lastLogId.current = log.at(-1)?.id ?? lastLogId.current
   }, [log, anim])
 
+  useEffect(() => {
+    const el = wrapRef.current
+    if (!el) return
+
+    const clientToWorld = (clientX, clientY) => {
+      const rect = svgRef.current.getBoundingClientRect()
+      const { cx, cy, viewW, viewH } = camRef.current
+      return [
+        ((clientX - rect.left) / rect.width) * viewW + (cx - viewW / 2),
+        ((clientY - rect.top) / rect.height) * viewH + (cy - viewH / 2),
+      ]
+    }
+
+    const onWheel = (e) => {
+      e.preventDefault()
+      const { cx, cy, zoom } = camRef.current
+      const factor = e.deltaY > 0 ? 0.9 : 1.11
+      const [wx, wy] = clientToWorld(e.clientX, e.clientY)
+      const nextZoom = zoom * factor
+      const clamped = clampCamera(cx, cy, nextZoom, base.vw, base.vh)
+      const viewW = base.vw / clamped.zoom
+      const viewH = base.vh / clamped.zoom
+      const rect = svgRef.current.getBoundingClientRect()
+      const nx = wx - ((e.clientX - rect.left) / rect.width - 0.5) * viewW
+      const ny = wy - ((e.clientY - rect.top) / rect.height - 0.5) * viewH
+      setCam(clampCamera(nx, ny, clamped.zoom, base.vw, base.vh))
+    }
+
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [base.vw, base.vh])
+
+  function onPointerDown(e) {
+    if (e.button !== 0) return
+    dragRef.current = {
+      pointerId: e.pointerId,
+      x: e.clientX,
+      y: e.clientY,
+      cx: cam.cx,
+      cy: cam.cy,
+      zoom: cam.zoom,
+      viewW: cam.viewW,
+      viewH: cam.viewH,
+      moved: false,
+    }
+    e.currentTarget.setPointerCapture(e.pointerId)
+    e.currentTarget.classList.add('panning')
+  }
+
+  function onPointerMove(e) {
+    const d = dragRef.current
+    if (!d || d.pointerId !== e.pointerId) return
+    const rect = svgRef.current.getBoundingClientRect()
+    const { viewW, viewH, zoom } = camRef.current
+    const dx = ((e.clientX - d.x) / rect.width) * (d.viewW ?? viewW)
+    const dy = ((e.clientY - d.y) / rect.height) * (d.viewH ?? viewH)
+    if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 3) d.moved = true
+    setCam(clampCamera(d.cx - dx, d.cy - dy, d.zoom ?? zoom, base.vw, base.vh))
+  }
+
+  function onPointerUp(e) {
+    const d = dragRef.current
+    if (!d || d.pointerId !== e.pointerId) return
+    dragRef.current = null
+    e.currentTarget.releasePointerCapture(e.pointerId)
+    e.currentTarget.classList.remove('panning')
+  }
+
+  function resetCamera() {
+    setCam(clampCamera(DEFAULT_CX, DEFAULT_CY, 1, base.vw, base.vh))
+  }
+
+  const viewBox = `${cam.cx - cam.viewW / 2} ${cam.cy - cam.viewH / 2} ${cam.viewW} ${cam.viewH}`
+
   return (
     <section ref={wrapRef} className="map-wrap box" aria-label="Peta kota">
-      <svg className="map" viewBox={fit.viewBox} preserveAspectRatio="xMidYMid slice" role="img" aria-label="Peta kota wireframe: HQ di tengah, gedung kerja ditandai marker">
+      <svg
+        ref={svgRef}
+        className="map"
+        viewBox={viewBox}
+        preserveAspectRatio="xMidYMid meet"
+        role="img"
+        aria-label="Peta kota wireframe: geser untuk pan, scroll untuk zoom"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        onDoubleClick={resetCamera}
+      >
         <defs>
           <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="3" result="b" />
@@ -146,8 +280,8 @@ function MapView({ heroes, log, selected, traveling, onSelect, onTravelChange, c
       </svg>
       <div className="scan" />
       <div className="hud-corner" style={{ left: 12, top: 10 }}>PETA DISPATCH // SEKTOR 7<br />LAT -6.2088 · LON 106.8456</div>
-      <div className="hud-corner" style={{ right: 14, top: 10, textAlign: 'right' }}>U ▲<br />SKALA 1:5000</div>
-      <div className="map-hint mono">1–9 = pilih hero · Space = angkat telepon · Esc = tutup detail</div>
+      <div className="hud-corner" style={{ right: 14, top: 10, textAlign: 'right' }}>U ▲<br />ZOOM {cam.zoom.toFixed(1)}×</div>
+      <div className="map-hint mono">Geser · scroll zoom · 2× klik = reset · 1–9 = hero · Space = telepon</div>
       {children}
     </section>
   )

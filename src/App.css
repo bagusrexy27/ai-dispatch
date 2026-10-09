@@ -48,15 +48,16 @@
 @keyframes slideIn { from { opacity: 0; transform: translateY(6px); } }
 
 /* map */
-.map-wrap { grid-area: map; position: relative; margin: 12px; overflow: hidden; background: radial-gradient(ellipse at 50% 55%, #0c1426 0%, #060a12 75%); }
-.map { width: 100%; height: 100%; display: block; }
+.map-wrap { grid-area: map; position: relative; margin: 12px; overflow: hidden; background: radial-gradient(ellipse at 50% 55%, #0c1426 0%, #060a12 75%); touch-action: none; }
+.map { width: 100%; height: 100%; display: block; cursor: grab; }
+.map.panning { cursor: grabbing; }
+.map .hero { cursor: pointer; }
 .hud-corner { position: absolute; font-family: var(--font-mono); font-size: 10px; color: var(--wire); letter-spacing: .08em; pointer-events: none; }
 .scan { position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(transparent 0 3px, rgba(169, 203, 230, .025) 3px 4px); }
 .map .pad { fill: #0b1426; stroke: var(--wire); stroke-opacity: .35; stroke-width: .1; }
-.map .park { fill: #0b1e1a; stroke: #2c6b55; stroke-opacity: .8; stroke-width: .1; }
-.map .lawn { fill: #0c1b1d; stroke: #2c6b55; stroke-opacity: .6; stroke-width: .1; }
+.map .park { fill: #113322; stroke: #3f9a70; stroke-opacity: .7; stroke-width: .1; }
+.map .lawn { fill: #0e281d; stroke: #2f7a58; stroke-opacity: .45; stroke-width: .1; }
 .map .pier { fill: #0e1729; stroke: var(--wire-hi); stroke-opacity: .5; stroke-width: .12; }
-.map .tree { fill: #12332b; stroke: #3a8a6c; stroke-width: .08; }
 .mk-name { font-family: var(--font-display); text-transform: uppercase; letter-spacing: .05em; font-size: 14px; fill: var(--text); }
 .mk-sub { font-family: var(--font-mono); font-size: 9.5px; fill: var(--muted); }
 .mk-ring-alert { fill: none; stroke: var(--alert); stroke-width: 3; animation: ringPulse 1s ease-out infinite; transform-box: fill-box; transform-origin: center; }

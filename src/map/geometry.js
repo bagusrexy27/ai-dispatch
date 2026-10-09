@@ -14,9 +14,10 @@ export const crx = (y) => coastX(y) + 9
 
 /* jaringan jalan: grid tegak lurus + jalan pantai; semua persimpangan 90° */
 export const XS = [-8, 8, 24, 40, 56, 72, 88], YS = [-72, -56, -40, -24, -8, 8, 24, 40, 56, 72]
-const ART_X = [8], ART_Y = [8]
+export const ART_X = [8], ART_Y = [8]
 const SHIFT_X = { 24: (y) => (y >= 24 ? 6 : 0) }, SHIFT_Y = { 40: (x) => (x >= 40 ? 4 : 0) }
-const OMIT = new Set(['h:-8:-40', 'v:40:-8', 'h:-8:40'])
+/* `v:40:-8` sengaja TIDAK di-omit: butuh avenue di barat twin hotel (~48,8). */
+const OMIT = new Set(['h:-8:-40', 'h:-8:40'])
 export const gx = (x, y) => x + (SHIFT_X[x] ? SHIFT_X[x](y) : 0)
 export const gy = (x, y) => y + (SHIFT_Y[y] ? SHIFT_Y[y](x) : 0)
 const SPLITS = { H: [0, 8], n_bengkel: [-15, 8], n_menara: [16, -24], n_perpus: [32, 8], n_tunggu: [16, 24] }
@@ -66,12 +67,12 @@ export const RAIL = [[crx(-48), -48], [130, -48]]
 
 /* gedung kerja; key = LocationId domain */
 export const LOCS = {
-  hq: { name: 'HQ', sub: 'hub dispatch', foot: [-3.5, -5, 3.5, 1], h: 7.1, door: [0, 1], node: 'H', color: 'var(--accent)', icon: 'hq' },
-  coding: { name: 'Bengkel Kode', sub: 'coding', foot: [-18, 14, -12, 18], h: 2.3, door: [-15, 13.8], node: 'n_bengkel', color: 'var(--st-mission)', icon: 'coding' },
-  radio: { name: 'Menara Radio', sub: 'koordinasi', foot: [14.5, -30.5, 17.5, -27.5], h: 6, door: [16, -27.3], node: 'n_menara', color: 'var(--st-radio)', icon: 'talking', slim: true },
-  investigate: { name: 'Perpustakaan', sub: 'membaca', foot: [29, -4, 35, 0], h: 2.6, door: [32, 0.9], node: 'n_perpus', color: 'var(--st-investigate)', icon: 'reading' },
-  standby: { name: 'Ruang Tunggu', sub: 'standby', foot: [12.5, 13.5, 19.5, 16.5], h: 1.2, door: [16, 18.2], node: 'n_tunggu', color: 'var(--st-standby)', icon: 'waiting' },
-  dock: { name: 'Dermaga Kirim', sub: 'commit', foot: [-37, -11, -33, -5], h: 1.1, door: [-32.8, -8], node: 'c-8', color: 'var(--ok)', icon: 'box' },
+  hq: { name: 'HQ', sub: 'hub dispatch', foot: [-3.2, -4.6, 3.2, 0.9], h: 5.8, door: [0, 1], node: 'H', color: 'var(--accent)', icon: 'hq' },
+  coding: { name: 'Bengkel Kode', sub: 'coding', foot: [-17.5, 14.2, -12.5, 17.6], h: 2.8, door: [-15, 13.8], node: 'n_bengkel', color: 'var(--st-mission)', icon: 'coding' },
+  radio: { name: 'Menara Radio', sub: 'koordinasi', foot: [14.8, -30.2, 17.2, -27.8], h: 4.6, door: [16, -27.3], node: 'n_menara', color: 'var(--st-radio)', icon: 'talking', slim: true },
+  investigate: { name: 'Perpustakaan', sub: 'membaca', foot: [29.2, -3.6, 34.6, -0.2], h: 3.1, door: [32, 0.9], node: 'n_perpus', color: 'var(--st-investigate)', icon: 'reading' },
+  standby: { name: 'Ruang Tunggu', sub: 'standby', foot: [13, 13.8, 19, 16.2], h: 2.0, door: [16, 18.2], node: 'n_tunggu', color: 'var(--st-standby)', icon: 'waiting' },
+  dock: { name: 'Dermaga Kirim', sub: 'commit', foot: [-36.5, -10.5, -33.2, -5.2], h: 1.4, door: [-32.8, -8], node: 'c-8', color: 'var(--ok)', icon: 'box' },
 }
 
 for (const [k, L] of Object.entries(LOCS)) {
@@ -150,3 +151,11 @@ export function along(p, d) {
   }
   return p[p.length - 1]
 }
+
+/** Zoom in maksimal (3× framing default). */
+export const MAP_ZOOM_MAX = 3
+/**
+ * Zoom out maksimal. Viewport di level ini = seluruh “scope” peta:
+ * pan terkunci; zoom in di atas ini boleh geser dalam scope yang sama.
+ */
+export const MAP_ZOOM_MIN = 0.8
