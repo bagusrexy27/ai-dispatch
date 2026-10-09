@@ -83,8 +83,9 @@ Live (opsional) — lihat [`../tech/SETUP.md`](../tech/SETUP.md).
 | P1 | Scaffold `adapters/` | Done | `generic-http` starter + indeks |
 | P2 | Adapter Cursor / Claude Code | Done | `adapters/cursor` · `adapters/claude-code` (observe; gate opsional) |
 | P2 | Auth jika server diexpose | Done | `DISPATCH_TOKEN` untuk ingest + decision; UI: `VITE_DISPATCH_TOKEN` |
-| P3 | Publish npm / template | Todo | Setelah API event stabil |
+| P3 | Publish npm / template | Partial | CI GitHub Actions + `.env.example`; publish npm ditunda |
 | P3 | Multi-operator / room | Todo | Bukan blocker MVP OSS |
+| — | Live reload radio log | Done | Snapshot `recent` → hydrate client |
 
 Non-goals tetap mengikuti [`PRD.md`](./PRD.md) §6 (bukan multi-tenant SaaS, bukan autopilot call).
 

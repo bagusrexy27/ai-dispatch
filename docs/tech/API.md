@@ -161,7 +161,8 @@ Jika `DISPATCH_TOKEN` diset, header `Authorization: Bearer …` wajib (sama sepe
 
 ## Snapshot (opsional)
 
-`GET /v1/snapshot` → `{ heroes, openCalls, lastEventId }` untuk hydrate awal. Client lalu membuka `GET /v1/stream?since={lastEventId}`; saat reconnect, header `Last-Event-ID` menang atas `since`. Server menyimpan buffer 500 event terakhir untuk replay.
+`GET /v1/snapshot` → `{ heroes, openCalls, lastEventId, recent }` untuk hydrate awal.  
+`recent` = hingga 100 event wire terakhir (dari buffer server) agar radio log bisa dibangun ulang setelah reload. Client membuka `GET /v1/stream?since={lastEventId}`; saat reconnect, header `Last-Event-ID` menang atas `since`. Buffer penuh: 500 event.
 
 ## Ingest (sumber → server)
 

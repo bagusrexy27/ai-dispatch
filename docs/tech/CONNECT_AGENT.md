@@ -94,4 +94,4 @@ Jika forward gagal, emit `call_closed` dengan `reason: "failed"` (atau biarkan c
 1. Fake agent muncul sebagai hero (callsign dari hash sesi).
 2. `call_open` → panel NELPON MARKAS di UI.
 3. Jawab Y → fake agent log `approve` dan lanjut commit/status.
-4. Reload UI → snapshot mengembalikan hero (log radio mulai kosong — known limitation).
+4. Reload UI → snapshot mengembalikan hero + `recent` (radio log terisi ulang selama event masih di buffer server).

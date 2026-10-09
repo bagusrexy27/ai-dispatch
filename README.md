@@ -38,8 +38,10 @@ Panduan praktis: [`docs/tech/CONNECT_AGENT.md`](docs/tech/CONNECT_AGENT.md) · k
 
 ## Shortcut
 
-| Tombol | Aksi |
-|--------|------|
+| Tombol / gestur | Aksi |
+|-----------------|------|
+| Geser peta / scroll | Pan / zoom (batas kota) |
+| 2× klik peta | Reset kamera |
 | `1`–`9` | Pilih hero di roster |
 | `Space` | Fokus panggilan teratas |
 | `Y` / `N` / `R` | Setujui / tolak / balas (permission) |
@@ -78,6 +80,10 @@ Panduan praktis: [`docs/tech/CONNECT_AGENT.md`](docs/tech/CONNECT_AGENT.md) · k
 - Kontribusi: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 - Produk: [`docs/product/PRD.md`](docs/product/PRD.md), [`DOMAIN.md`](docs/product/DOMAIN.md), [`EVENTS.md`](docs/product/EVENTS.md)
 - Teknis: [`docs/tech/API.md`](docs/tech/API.md), [`ARCHITECTURE.md`](docs/tech/ARCHITECTURE.md), [`SETUP.md`](docs/tech/SETUP.md), [`INTEGRATION.md`](docs/tech/INTEGRATION.md)
+
+## CI
+
+Push/PR ke `main` menjalankan `npm test`, `lint`, dan `build` (lihat [`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
 
 ## License
 

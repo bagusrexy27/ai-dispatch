@@ -44,7 +44,7 @@ Prinsip PRD tetap: **presence over tables** · **one composition** (peta full-bl
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Peta selalu penuh**: `viewBox` berpusat di HQ dan mengikuti rasio panel (`xMidYMid slice`), dan semua gedung kerja selalu terlihat. Operator tidak perlu geser atau zoom, jadi tidak ada pan, zoom, atau kamera yang ikut hero.
+- **Peta bisa digeser & di-zoom** dalam batas kota (AABB urban fabric): zoom out/in punya min/max, pan diklem supaya viewport tidak menampilkan area kosong di luar kota. Tidak ada kamera otomatis ikut hero. Double-click mengembalikan framing default (HQ).
 - Panel samping memakai latar opak dengan outline tinta, bukan kaca blur.
 - Incoming call **tidak** berupa modal. Panel masuk ke kolom kiri di atas radio log (radio log menyusut), jadi tidak menutupi peta. Beberapa panggilan menumpuk (maks 3 terlihat, sisanya ditulis "+N lagi").
 - **≤900px:** radio log disembunyikan (jadi drawer lewat tombol di header), incoming call menjadi panel melayang di atas roster, dan detail hero menjadi sheet dari bawah.
@@ -77,14 +77,14 @@ Callsign dipilih secara deterministik dari hash session id memakai daftar kata t
 
 **Proyeksi**: tampak miring, seperti kamera drone. Tanah diputar −16° lalu dipipihkan 0.56: `sx = 11·(cos θ·x − sin θ·y)` dan `sy = 11·0.56·(sin θ·x + cos θ·y) − 10·z`, dengan θ = −16°. HQ ada di (0,0). Lapisan tanah (laut, jalan, kavling, pohon) digambar dalam koordinat dunia lewat satu `transform="matrix(…)"`, sedangkan gedung digambar sebagai prisma di koordinat layar dan diurutkan dari belakang ke depan.
 
-**Peta selalu penuh**: `viewBox` berpusat di HQ dengan lebar dunia 1000–1150 (mengikuti lebar panel), sedangkan tingginya mengikuti rasio panel (`ResizeObserver`), memakai `preserveAspectRatio="xMidYMid slice"`. Kota selalu digenerate lebih luas dari layar, jadi sudut layar tidak pernah kosong.
+**Kamera operator**: `viewBox` default berpusat di HQ (lebar dunia 1000–1150, tinggi mengikuti rasio panel). Pan (drag) dan zoom (scroll) mengubah pusat/`zoom`, diklem ke `MAP_BOUNDS` di `geometry.js` agar viewport selalu di dalam area perkotaan. `preserveAspectRatio="xMidYMid meet"`.
 
 **Jalan: lurus dan rapi, belokannya halus.** Jalan berupa grid tegak lurus dengan jarak 16 unit, ditambah satu jalan pantai. Aturannya:
 
 - **Setiap persimpangan 90°**, berbentuk T atau +. Tidak ada pertigaan lancip atau perempatan miring.
 - **Belokan = kurva S** (Bezier kubik yang tangen di kedua ujungnya searah sumbu jalan). Jadi jalan bisa bergeser beberapa unit di tengah blok tanpa mengubah sudut persimpangan. Contohnya avenue x=24 yang bergeser 6 unit ke timur di selatan HQ, dan jalan y=40 yang turun 4 unit di timur.
 - **Jalan pantai** mengikuti garis pantai dengan kurva halus (Catmull-Rom). Pantainya hampir lurus, jadi jalan yang bertemu dengannya tetap mendekati tegak lurus.
-- Beberapa ruas dihilangkan untuk membentuk blok besar (stadion, kampus, taman) sehingga muncul pertigaan T. Tidak ada jalan buntu yang terlihat.
+- Beberapa ruas dihilangkan untuk blok besar (stadion utara `h:-8:-40`, taman selatan `h:-8:40`). Avenue x=40 tetap ada supaya koridor barat twin hotel tidak tertutup kavling.
 - Rel kereta lurus sejajar grid dan memotong avenue tegak lurus.
 
 | Kelas | Lebar | Isi | Marka |
@@ -104,6 +104,7 @@ Semua jalan memakai tepi `#4d77a0`, aspal `--road`, dan lampu jalan. Setiap gedu
 | Kawasan Industri, Stasiun | ind | gudang panjang, tangki bundar |
 | Stadion | civic | stadion elips dengan lapangan dan 4 tiang lampu, taman |
 | Kampus | campus | halaman rumput, gedung bentuk U, kubah bertingkat |
+| Scenic (dekoratif, tanpa marker) | — | ganti kavling generic lewat `fill()`: menara jam, atrium, data center, twin hotel, helipad, rumah perahu danau |
 | Taman Kota | park | danau, pohon, paviliun |
 | Bukit Antena, Perumahan Selatan/Timur/Barat | resid | rumah kecil 2 baris per blok, sesekali taman |
 

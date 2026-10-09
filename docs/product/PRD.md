@@ -55,7 +55,7 @@ Satu komposisi layar bergaya game Dispatch: peta kota wireframe (presence), rost
 
 - Multi-tenant SaaS / billing.
 - Edit kode dari UI Dispatch.
-- Pan/zoom kamera peta atau kamera ikut hero.
+- Kamera otomatis ikut hero (pan/zoom manual operator boleh; tetap di dalam batas kota).
 - Autopilot keputusan call.
 - Membawa kembali aset/tema visual koloni luar angkasa (metafora itu sudah diganti).
 

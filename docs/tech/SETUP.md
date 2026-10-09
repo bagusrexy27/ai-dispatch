@@ -54,6 +54,8 @@ npm run agent:fake # contoh agen: event + call + tunggu keputusan
 | `VITE_DISPATCH_TOKEN` | token yang sama untuk UI (`sendDecision`); set di `.env.local` / mode live |
 | `DISPATCH_URL` | target proxy Vite & fake agent / adapter |
 
+Contoh lengkap: [`.env.example`](../../.env.example).
+
 Server menyimpan state di **memori** (restart = kosong). Default hanya localhost.
 
 Kalau diexpose ke LAN:
