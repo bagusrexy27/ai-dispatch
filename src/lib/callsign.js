@@ -1,4 +1,4 @@
-const WORDS = ['Rex', 'Nova', 'Byte', 'Iroh', 'Vega', 'Juno', 'Kilo', 'Mako', 'Pixel', 'Orca', 'Zed', 'Lumen', 'Tango', 'Echo', 'Sable', 'Quill']
+const WORDS = ['Rex', 'Nova', 'Bolt', 'Iroh', 'Vega', 'Juno', 'Vex', 'Mako', 'Pixel', 'Orca', 'Zed', 'Lumen', 'Tango', 'Echo', 'Sable', 'Quill']
 
 export function callsignFor(sessionId) {
   let hash = 0

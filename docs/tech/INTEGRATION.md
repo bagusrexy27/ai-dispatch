@@ -2,8 +2,9 @@
 
 | Field | Value |
 |-------|-------|
-| Status | Draft v1 · 2026-09-29 |
+| Status | Draft v2 · 2026-10-09 |
 | Tujuan | Sumber agen mentah → event normal [`API.md`](./API.md) |
+| Lapisan OSS | Layer 3 — opsional; core UI tetap jalan tanpa adapter ([`OPEN_SOURCE.md`](../product/OPEN_SOURCE.md)) |
 
 ## Pola
 
@@ -24,11 +25,14 @@ Setiap adapter:
 
 | Id | Sumber | Catatan |
 |----|--------|---------|
-| `demo` | Timer in-process | Wajib; deterministic seed untuk QA |
-| `cursor` / `claude-code` | Hook/session log (TBD) | Prioritas produk lokal |
-| `generic-http` | Webhook POST event sudah normal | Integrasi custom |
+| `demo` | Timer in-process (`src/demoFeed.js`) | Wajib di core; first-run OSS |
+| `fake` | `server/fake-agent.js` | Contoh live tanpa hook proprietary |
+| `generic-http` | `adapters/generic-http/` | Starter POST event |
+| `cursor` / `claude-code` | Hook/session log (TBD) | Prioritas berikutnya |
 
-Detail binding sumber nyata diisi saat sumber dipilih; jangan hardcode proprietary di core.
+Panduan praktis: [`CONNECT_AGENT.md`](./CONNECT_AGENT.md).
+
+Detail binding sumber nyata diisi saat sumber dipilih; jangan hardcode proprietary di core UI. Adapter boleh hidup di folder `adapters/` atau repo terpisah.
 
 ## Decision forwarding
 

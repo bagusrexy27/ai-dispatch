@@ -15,7 +15,7 @@ const heroes = [
     history: ['✓ review: 2 catatan'],
   },
   {
-    id: 'byte', sessionId: 'sess_3be44c0', callsign: 'Byte', model: 'CL', variant: 'Sonnet', status: 'idle', target: 'coding',
+    id: 'byte', sessionId: 'sess_3be44c0', callsign: 'Bolt', model: 'CL', variant: 'Sonnet', status: 'idle', target: 'coding',
     project: 'operational-keuangan', task: 'Bump go-common ke versi terbaru', branch: 'chore/bump-go-common',
     tokensUsed: 176000, tokensMax: 200000, costUsd: 0.31, stats: [7, 6, 2, 5, 4],
     files: [{ op: 'read', path: 'CLAUDE.md' }, { op: 'read', path: 'main.go' }, { op: 'edit', path: 'go.mod' }],
@@ -29,7 +29,7 @@ const heroes = [
     history: [],
   },
   {
-    id: 'kilo', sessionId: 'sess_5520fe1', callsign: 'Kilo', model: 'GK', variant: '4.7', status: 'idle', target: 'waiting',
+    id: 'kilo', sessionId: 'sess_5520fe1', callsign: 'Vex', model: 'GK', variant: '4.7', status: 'idle', target: 'waiting',
     project: 'bsc-be', task: 'Menunggu hasil go test ./...', branch: 'fix/realisasi-rounding',
     tokensUsed: 94000, tokensMax: 200000, costUsd: 0.12, stats: [6, 3, 1, 8, 5],
     files: [{ op: 'edit', path: 'app/service/realisasi.go' }],

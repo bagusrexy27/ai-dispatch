@@ -113,7 +113,7 @@ Sidekick dilepas dari induk (tali teal hilang). `sidekickId` tak dikenal diabaik
     "heroId": "sess_…",
     "kind": "permission",
     "quote": "Boss, saya mau jalankan go mod tidy…",
-    "quoteSerious": "Byte meminta izin menjalankan go mod tidy.",
+    "quoteSerious": "Bolt meminta izin menjalankan go mod tidy.",
     "techLine": "perintah: go mod tidy",
     "options": null,
     "startedAt": "2026-09-29T07:01:00.000Z"

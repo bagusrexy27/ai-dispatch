@@ -2,8 +2,9 @@
 
 | Field | Value |
 |-------|-------|
-| Status | Draft v1 · 2026-09-29 |
-| Fase | Mockup → app nyata |
+| Status | Draft v2 · 2026-10-09 |
+| Fase | Mockup → app nyata → distribusi OSS |
+| OSS | [`../product/OPEN_SOURCE.md`](../product/OPEN_SOURCE.md) |
 
 ## 1. Ringkas
 
@@ -13,10 +14,12 @@
                                [Operator decisions]
 ```
 
-- **Client**: SPA (target React + Vite) merender peta SVG, roster, call, log.
+Distribusi open source memakai **tiga lapisan** (core wajib; server & adapter opsional) — detail di OPEN_SOURCE.md.
+
+- **Client**: SPA (React + Vite) merender peta SVG, roster, call, log.
 - **Ingest**: menormalisasi event dari sumber agen ke skema [`API.md`](./API.md).
-- **MVP jalur A**: client + **demo feeder** in-browser (tanpa backend).
-- **MVP jalur B**: small backend (Go/Node) SSE/WebSocket + POST decision.
+- **MVP jalur A (default OSS)**: client + **demo feeder** in-browser (tanpa backend).
+- **MVP jalur B (opsional)**: small backend (Node) SSE + POST decision.
 
 ## 2. Keputusan (ADR singkat)
 
@@ -25,7 +28,8 @@
 | ADR-1 | Kode menang atas dokumen visual setelah impl | Hindari drift design-style |
 | ADR-2 | Event-sourced UI state | Cocok radio log + travel + call |
 | ADR-3 | SSE atau WS untuk feed; REST/POST untuk decision | Satu arah stream + ack keputusan |
-| ADR-4 | Demo mode wajib | Honest demo offline / CI |
+| ADR-4 | Demo mode wajib | Honest demo offline / CI / first-run OSS |
+| ADR-6 | Core tanpa wajib adapter | Install-and-use; agen lokal = add-on |
 | ADR-5 | Map logic di client dulu | Proyeksi & pathfinding sudah di mockup |
 
 ## 3. Layer client

@@ -71,7 +71,7 @@ Prinsip PRD tetap: **presence over tables** · **one composition** (peta full-bl
 | Biaya | **Budget** di header; per hero di detail | `Budget` |
 | Feed event | **Radio log** | `RadioLog` |
 
-Callsign dipilih secara deterministik dari hash session id memakai daftar kata tetap (`Rex`, `Nova`, `Byte`, `Ivy`, `Mochi`, …). Id asli tetap tampil di detail, dan callsign yang sama selalu berarti sesi yang sama.
+Callsign dipilih secara deterministik dari hash session id memakai daftar kata tetap (`Rex`, `Nova`, `Bolt`, `Ivy`, `Mochi`, …). Id asli tetap tampil di detail, dan callsign yang sama selalu berarti sesi yang sama.
 
 ### 3.1 Peta kota
 
@@ -390,8 +390,8 @@ Muncul dengan scale 1.4 → 1 dan rotasi −8° dalam 180ms (efek dibanting), la
 | delegate | `Rex → Nova: "Tolong urus {task}, saya sibuk."` | `Rex mendelegasikan ke Nova: {task}` |
 | dispatch | `HQ → Ivy: "Meluncur ke {gedung}. Jangan mampir."` (beberapa variasi, dipilih saat event dicatat lalu tidak berubah) | `HQ → Ivy: dikirim ke {gedung}` |
 | commit | `✓ Rex: "Beres. {sha7} {msg}"` | `✓ Rex commit {sha7} {msg}` |
-| error | `✗ Byte: "Waduh. {error_short}"` | `✗ Byte error: {error_short}` |
-| attention (izin) | `☎ Byte: "Boss, butuh izin dulu nih."` | `☎ Byte menunggu keputusan operator` |
+| error | `✗ Bolt: "Waduh. {error_short}"` | `✗ Bolt error: {error_short}` |
+| attention (izin) | `☎ Bolt: "Boss, butuh izin dulu nih."` | `☎ Bolt menunggu keputusan operator` |
 | attention (pilih) | `☎ Nova: "Boss, pilih satu dong."` | `☎ Nova menunggu pilihan operator` |
 | attention (tanya) | `☎ Ivy: "Boss, saya bingung nih."` | `☎ Ivy menunggu jawaban operator` |
 | idle | `Mochi balik ke markas, bikin kopi.` | `Mochi idle` |

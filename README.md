@@ -2,26 +2,39 @@
 
 Pemantau agen AI coding bergaya game *Dispatch*: operator jadi dispatcher, agen jadi hero di peta kota. Lihat sekilas siapa sedang apa, di repo mana, dan jawab saat hero nelpon markas.
 
-## Jalankan
+**Open source (MIT)** — tujuan distribusi: *install dan langsung bisa dipakai*. Demo penuh jalan tanpa backend. Live agent opsional.
+
+Dokumen visi OSS: [`docs/product/OPEN_SOURCE.md`](docs/product/OPEN_SOURCE.md).
+
+## Quick start (30 detik)
+
+Butuh [Node.js](https://nodejs.org/) 20+.
 
 ```bash
+git clone <repo-url> ai-dispatch
+cd ai-dispatch
 npm install
-npm run dev      # http://localhost:5173
-npm run lint
-npm run build
+npm run dev
 ```
 
-Tanpa backend: **Demo feed** (toggle di header) menghasilkan event palsu secara offline.
+Buka URL yang dicetak Vite (biasanya `http://localhost:5173`).
 
-Dengan agen sungguhan (SSE):
+Kamu harus melihat: header **AI Dispatch**, peta kota, roster hero, radio log, dan panggilan masuk yang bisa dijawab. Toggle **SFX**, **Musik**, dan **Mode serius** ada di header.
+
+Tidak perlu `.env` untuk mode ini.
+
+## Live mode (opsional)
+
+Sambungkan event agen sungguhan lewat server lokal:
 
 ```bash
-npm run server      # backend kecil tanpa dependency, http://127.0.0.1:8787
-npm run dev:live    # UI tersambung ke /v1/stream
-npm run agent:fake  # contoh agen: kirim event, nelpon markas, tunggu keputusan
+npm run server      # http://127.0.0.1:8787
+npm run dev:live    # UI → /v1/stream (proxy Vite)
+npm run agent:fake  # contoh agen: event + panggilan + tunggu keputusan
 ```
 
-Agen/adapter mengirim event ke `POST /v1/events` dan membaca keputusan dari `GET /v1/calls/{callId}`. Kontrak lengkap di [`docs/tech/API.md`](docs/tech/API.md), runbook di [`docs/tech/SETUP.md`](docs/tech/SETUP.md).
+Agen/adapter: `POST /v1/events`, baca keputusan lewat `GET /v1/calls/{callId}`.  
+Panduan praktis: [`docs/tech/CONNECT_AGENT.md`](docs/tech/CONNECT_AGENT.md) · kontrak [`API.md`](docs/tech/API.md) · runbook [`SETUP.md`](docs/tech/SETUP.md) · starter [`adapters/`](adapters/).
 
 ## Shortcut
 
@@ -34,21 +47,38 @@ Agen/adapter mengirim event ke `POST /v1/events` dan membaca keputusan dari `GET
 | `Ctrl+Enter` | Kirim teks balasan/jawaban |
 | `Esc` | Tutup detail hero |
 
+## Scripts
+
+| Script | Fungsi |
+|--------|--------|
+| `npm run dev` | UI + demo feed (default) |
+| `npm run build` / `preview` | Build produksi |
+| `npm test` | Tes reducer, translate, server |
+| `npm run lint` | ESLint |
+| `npm run server` | Backend SSE/decision/ingest |
+| `npm run dev:live` | UI mode SSE |
+| `npm run agent:fake` | Agen contoh |
+
 ## Struktur
 
-| File | Isi |
+| Path | Isi |
 |------|-----|
-| `src/world.js` | State dunia + reducer `applyEvent` (satu-satunya jalur update) |
-| `src/demoFeed.js` | Feeder event offline |
-| `src/ingest/` | Klien SSE + `translate` event wire → event reducer |
-| `server/` | Server stream/decision/ingest + agen palsu |
-| `test/` | `node --test` untuk reducer, translate, server |
-| `src/MapView.jsx` | Peta kota, perjalanan via HQ, sidekick, stempel, paket commit |
-| `src/IncomingCall.jsx` | Panel panggilan `permission` · `choose` · `ask` |
-| `src/lib/status.js` | Status, lokasi, badge model |
-| `src/lib/copy.js` | Teks radio log (normal & mode serius) |
+| `src/` | UI, world reducer, demo feed, peta |
+| `src/ingest/` | Klien SSE + translate wire → reducer |
+| `server/` | Server tanpa dependency + fake agent |
+| `adapters/` | Starter sambung agen (generic-http) |
+| `test/` | `node --test` |
+| `docs/product/` | PRD, domain, events, **open source** |
+| `docs/tech/` | API, architecture, setup, integration |
+| `mockup.html` | Referensi visual interaktif |
 
 ## Dokumen
 
+- OSS: [`docs/product/OPEN_SOURCE.md`](docs/product/OPEN_SOURCE.md)
+- Kontribusi: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 - Produk: [`docs/product/PRD.md`](docs/product/PRD.md), [`DOMAIN.md`](docs/product/DOMAIN.md), [`EVENTS.md`](docs/product/EVENTS.md)
-- Teknis: [`docs/tech/API.md`](docs/tech/API.md), [`FRONTEND.md`](docs/tech/FRONTEND.md), [`ARCHITECTURE.md`](docs/tech/ARCHITECTURE.md)
+- Teknis: [`docs/tech/API.md`](docs/tech/API.md), [`ARCHITECTURE.md`](docs/tech/ARCHITECTURE.md), [`SETUP.md`](docs/tech/SETUP.md), [`INTEGRATION.md`](docs/tech/INTEGRATION.md)
+
+## License
+
+[MIT](LICENSE)

@@ -2,7 +2,7 @@ const CALLS = [
   {
     kind: 'permission', heroId: 'byte',
     quote: 'Boss, saya mau jalankan `go mod tidy`. Ini bakal ngubah go.sum. Boleh?',
-    quoteSerious: 'Byte meminta izin menjalankan perintah berikut.',
+    quoteSerious: 'Bolt meminta izin menjalankan perintah berikut.',
     techLine: 'perintah: go mod tidy\ncwd: operational-keuangan-service\nefek: mengubah go.mod, go.sum',
   },
   {
@@ -25,7 +25,7 @@ const CALLS = [
   {
     kind: 'permission', heroId: 'kilo',
     quote: 'Test-nya merah terus. Saya boleh hapus test yang flaky?',
-    quoteSerious: 'Kilo meminta izin menghapus file test.',
+    quoteSerious: 'Vex meminta izin menghapus file test.',
     techLine: 'aksi: hapus file\npath: app/service/realisasi_flaky_test.go',
   },
 ]

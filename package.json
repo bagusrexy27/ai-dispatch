@@ -1,7 +1,12 @@
 {
   "name": "ai-dispatch",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "Open-source AI coding-agent monitor styled like Dispatch — demo works offline; live SSE optional",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,6 +16,7 @@
     "server": "node server/index.js",
     "dev:live": "vite --mode live",
     "agent:fake": "node server/fake-agent.js",
+    "agent:emit": "node adapters/generic-http/emit.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

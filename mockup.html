@@ -326,10 +326,10 @@ const heroes=[
    files:[['edit','internal/middleware/identity.go'],['read','internal/session/redis.go'],['create','internal/middleware/identity_test.go']],history:['✓ a1c9e2f tambah header X-User-Email','✗ go vet: unused import']},
   {id:'rex2',cs:'Rex-2',parent:'rex',model:'CL',variant:'Haiku',status:'investigate',project:'one-bff-go',task:'Cari pola test middleware',branch:'feat/identity-v2',session:'sess_8f2a91c/sub1',tok:[18,200],cost:0.02,stats:[.2,.9,.1,.1,0],files:[['read','internal/middleware/auth_test.go']],history:[]},
   {id:'nova',cs:'Nova',model:'GP',variant:'5.6',status:'radio',radioTo:'rex',project:'one-bff-go',task:'Review kontrak header X-User-*',branch:'feat/identity-v2',session:'sess_77d01ab',tok:[76,200],cost:0.21,stats:[.2,.7,.9,.3,.1],files:[['read','docs/api-contract.md']],history:['✓ review: 2 catatan']},
-  {id:'byte',cs:'Byte',model:'CL',variant:'Sonnet',status:'mission',project:'operational-keuangan',task:'Bump go-common ke versi terbaru',branch:'chore/bump-go-common',session:'sess_3be44c0',tok:[176,200],cost:0.31,stats:[.7,.6,.2,.5,.4],
+  {id:'byte',cs:'Bolt',model:'CL',variant:'Sonnet',status:'mission',project:'operational-keuangan',task:'Bump go-common ke versi terbaru',branch:'chore/bump-go-common',session:'sess_3be44c0',tok:[176,200],cost:0.31,stats:[.7,.6,.2,.5,.4],
    files:[['edit','go.mod'],['read','main.go'],['read','CLAUDE.md']],history:['✓ 9f03b1d update import path']},
   {id:'ivy',cs:'Ivy',model:'GM',variant:'3.8 Flash',status:'investigate',project:'documents-service',task:'Baca kontrak upload dokumen',branch:'main',session:'sess_c1a2090',tok:[42,200],cost:0.05,stats:[.3,.95,.2,.1,.1],files:[['read','internal/handler/upload.go'],['read','docs/API.md']],history:[]},
-  {id:'kilo',cs:'Kilo',model:'GK',variant:'4.7',status:'standby',project:'bsc-be',task:'Menunggu hasil go test ./...',branch:'fix/realisasi-rounding',session:'sess_5520fe1',tok:[94,200],cost:0.12,stats:[.6,.3,.1,.8,.5],files:[['edit','app/service/realisasi.go']],history:['✓ 44ab7c0 fix pembulatan realisasi']},
+  {id:'kilo',cs:'Vex',model:'GK',variant:'4.7',status:'standby',project:'bsc-be',task:'Menunggu hasil go test ./...',branch:'fix/realisasi-rounding',session:'sess_5520fe1',tok:[94,200],cost:0.12,stats:[.6,.3,.1,.8,.5],files:[['edit','app/service/realisasi.go']],history:['✓ 44ab7c0 fix pembulatan realisasi']},
   {id:'mochi',cs:'Mochi',model:'CL',variant:'Haiku',status:'idle',project:'—',task:'—',branch:'—',session:'sess_09e1d3a',tok:[8,200],cost:0.01,stats:[.3,.3,.2,.1,.2],files:[],history:['✓ selesai: rapikan README']}
 ];
 const byId=Object.fromEntries(heroes.map(h=>[h.id,h]));
@@ -730,14 +730,14 @@ function renderLog(){
 /* kind: permission | choose | ask — satu panel, tombol berbeda */
 const KIND_TAG={permission:'IZIN',choose:'PILIH',ask:'TANYA'};
 const calls=[
-  {kind:'permission',hero:'byte',quote:'"Boss, saya mau jalankan <code>go mod tidy</code>. Ini bakal ngubah go.sum. Boleh?"',quoteS:'Byte meminta izin menjalankan perintah berikut.',tech:'perintah: go mod tidy\ncwd: operational-keuangan-service\nefek: mengubah go.mod, go.sum'},
+  {kind:'permission',hero:'byte',quote:'"Boss, saya mau jalankan <code>go mod tidy</code>. Ini bakal ngubah go.sum. Boleh?"',quoteS:'Bolt meminta izin menjalankan perintah berikut.',tech:'perintah: go mod tidy\ncwd: operational-keuangan-service\nefek: mengubah go.mod, go.sum'},
   {kind:'choose',hero:'nova',quote:'"Boss, kontrak header X-User-* versi mana yang saya ikuti? Pilih satu."',quoteS:'Nova meminta pilihan kontrak API.',tech:'konteks: review feat/identity-v2\nfile: docs/api-contract.md',options:[
     {id:'a',label:'Ikuti draft BFF terbaru (X-User-ID + Email + Name)'},
     {id:'b',label:'Tetap kontrak lama (hanya X-User-ID)'},
     {id:'c',label:'Tunda review — tunggu ADR selesai'}
   ]},
   {kind:'ask',hero:'ivy',quote:'"Boss, path upload dokumen yang dipakai yang mana? Saya bingung antara dua handler."',quoteS:'Ivy menanyakan path upload yang benar.',tech:'repo: documents-service\nkandidat:\n  · POST /upload\n  · POST /v1/documents'},
-  {kind:'permission',hero:'kilo',quote:'"Test-nya merah terus. Saya boleh hapus test yang flaky?"',quoteS:'Kilo meminta izin menghapus file test.',tech:'aksi: hapus file\npath: app/service/realisasi_flaky_test.go'}
+  {kind:'permission',hero:'kilo',quote:'"Test-nya merah terus. Saya boleh hapus test yang flaky?"',quoteS:'Vex meminta izin menghapus file test.',tech:'aksi: hapus file\npath: app/service/realisasi_flaky_test.go'}
 ];
 let callIdx=0,callState='idle',callStart=0,callTimer=null;
 const curCall=()=>calls[callIdx%calls.length];

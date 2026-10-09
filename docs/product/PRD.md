@@ -5,6 +5,7 @@
 | Status | Draft v1 · 2026-09-29 |
 | Scope | Web app pemantau agen AI coding; operator = dispatcher, agen = hero |
 | Sumber visual | [`design-style.md`](../../design-style.md), [`mockup.html`](../../mockup.html) |
+| Distribusi | Open source — [`OPEN_SOURCE.md`](./OPEN_SOURCE.md) |
 
 ## 0. Hubungan dengan AI Colony Monitor
 

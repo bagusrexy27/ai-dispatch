@@ -4,7 +4,11 @@ let music = null
 let lastKrrk = 0
 const KRRK_GAP_MS = 1500
 
-const audio = () => (ctx ??= new AudioContext())
+function audio() {
+  ctx ??= new AudioContext()
+  if (ctx.state === 'suspended') ctx.resume()
+  return ctx
+}
 
 function tone(f, d, type = 'sine', v = 0.08, t0 = 0) {
   const a = audio(), o = a.createOscillator(), g = a.createGain()

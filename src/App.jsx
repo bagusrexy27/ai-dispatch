@@ -13,7 +13,7 @@ import { setMusic, setSfx, sfx } from './lib/sfx'
 import { STATUS } from './lib/status'
 import './App.css'
 
-const PREFS_KEY = 'ai-dispatch:serious'
+const PREFS_KEY = 'ai-dispatch:prefs'
 const FEED_MODE = import.meta.env.VITE_FEED_MODE === 'sse' || import.meta.env.MODE === 'live' ? 'sse' : 'demo'
 const API_BASE = import.meta.env.VITE_API_BASE ?? ''
 const DEMO_HEROES = createWorld(demoHeroes).heroes
@@ -21,6 +21,17 @@ const DEMO_SEND_MS = 800
 const CLOSING_MS = 2000
 const EVENT_SFX = { call_open: 'ring', commit: 'thunk', error: 'buzz' }
 const QUIET = new Set(['token_usage', 'cost', 'call_state', 'hero_upsert'])
+
+function loadPrefs() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PREFS_KEY) || '{}')
+    // migrate legacy key from early builds
+    if (localStorage.getItem('ai-dispatch:serious') === '1') raw.serious = true
+    return { serious: false, sfx: false, music: false, ...raw }
+  } catch {
+    return { serious: false, sfx: false, music: false }
+  }
+}
 
 const SENT = {
   approve: () => 'disetujui',
@@ -38,7 +49,7 @@ function App() {
   const [selected, setSelected] = useState(null)
   const [traveling, setTraveling] = useState(() => new Set())
   const [closing, setClosing] = useState(null)
-  const [prefs, setPrefs] = useState(() => ({ serious: localStorage.getItem(PREFS_KEY) === '1', sfx: false, music: false }))
+  const [prefs, setPrefs] = useState(loadPrefs)
   const worldRef = useRef(world)
   const callPanelRef = useRef(null)
 
@@ -47,7 +58,8 @@ function App() {
   })
 
   useEffect(() => {
-    localStorage.setItem(PREFS_KEY, prefs.serious ? '1' : '0')
+    localStorage.setItem(PREFS_KEY, JSON.stringify({ serious: prefs.serious, sfx: prefs.sfx, music: prefs.music }))
+    localStorage.removeItem('ai-dispatch:serious')
     setSfx(prefs.sfx)
     setMusic(prefs.music)
   }, [prefs])
@@ -138,7 +150,12 @@ function App() {
         callCount={calls.length}
         connection={connection}
         prefs={prefs}
-        onToggle={(key) => setPrefs((p) => ({ ...p, [key]: !p[key] }))}
+        onToggle={(key) => setPrefs((p) => {
+          const next = { ...p, [key]: !p[key] }
+          if (key === 'sfx') setSfx(next.sfx)
+          if (key === 'music') setMusic(next.music)
+          return next
+        })}
         onCallsClick={focusCall}
       />
 
