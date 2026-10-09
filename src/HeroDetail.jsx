@@ -1,5 +1,6 @@
 import { StatusLabel, Stamina } from './HeroCard'
-import { LOC_NAMES, STAT_LABELS, STATUS, fmtTok } from './lib/status'
+import { LOC_NAMES, MODEL_BG, STAT_LABELS, STATUS, fmtTok } from './lib/status'
+import { ABILITY_LABELS, characterFor } from './lib/characters'
 
 function Radar({ stats, color }) {
   const R = 60, c = [120, 82]
@@ -26,20 +27,62 @@ function Radar({ stats, color }) {
   )
 }
 
+function CharacterCard({ character, color }) {
+  return (
+    <>
+      <p className="tagline">“{character.tagline}”</p>
+      <div className="section">Kemampuan <span className="section-note">kartu karakter</span></div>
+      <ul className="abilities">
+        {ABILITY_LABELS.map((label, i) => (
+          <li key={label}>
+            <span className="ab-label">{label}</span>
+            <span className="ab-bar" role="meter" aria-label={label} aria-valuenow={character.abilities[i]} aria-valuemin={0} aria-valuemax={100}>
+              <i style={{ width: `${character.abilities[i]}%`, background: color }} />
+            </span>
+            <span className="ab-val mono">{character.abilities[i]}</span>
+          </li>
+        ))}
+      </ul>
+      <div className="special">
+        <span className="special-tag">Jurus</span>
+        <div><b className="display">{character.special.name}</b><p>{character.special.desc}</p></div>
+      </div>
+      <div className="weakness"><span className="special-tag">Kelemahan</span><p>{character.weakness}</p></div>
+    </>
+  )
+}
+
 function HeroDetail({ hero, traveling, onClose }) {
   const kid = hero.sidekicks[0]
+  const character = characterFor(hero)
+  const closeButton = <button type="button" className="close" aria-label="Tutup" onClick={onClose}>×</button>
 
   return (
     <aside className="detail box" aria-label={`Detail ${hero.callsign}`}>
-      <div className="detail-head">
-        <span className={`badge lg m-${hero.model}`} aria-label={`model ${hero.model}`}>{hero.model}</span>
-        <div className="detail-title">
-          <h3 className="display">{hero.callsign}</h3>
-          <div className="mono detail-meta">{hero.sessionId} · {hero.model} {hero.variant}</div>
+      {character ? (
+        <div className="hero-banner">
+          <img src={character.image} alt={`Ilustrasi ${hero.callsign}, ${character.title}`} />
+          {closeButton}
+          <div className="banner-text">
+            <span className={`badge sm m-${hero.model}`} aria-label={`model ${hero.model}`}>{hero.model}</span>
+            <span className="char-role mono">{character.role}</span>
+            <h3 className="display">{hero.callsign}</h3>
+            <div className="char-title display">{character.title}</div>
+            <div className="mono detail-meta">{hero.sessionId} · {hero.model} {hero.variant}</div>
+          </div>
         </div>
-        <button type="button" className="close" aria-label="Tutup" onClick={onClose}>×</button>
-      </div>
+      ) : (
+        <div className="detail-head">
+          <span className={`badge lg m-${hero.model}`} aria-label={`model ${hero.model}`}>{hero.model}</span>
+          <div className="detail-title">
+            <h3 className="display">{hero.callsign}</h3>
+            <div className="mono detail-meta">{hero.sessionId} · {hero.model} {hero.variant}</div>
+          </div>
+          {closeButton}
+        </div>
+      )}
       <div className="detail-body">
+        {character && <CharacterCard character={character} color={MODEL_BG[hero.model]} />}
         <div className="section">Profil kerja · 1 jam terakhir</div>
         <Radar stats={hero.stats} color={STATUS[hero.status].color} />
         <dl>

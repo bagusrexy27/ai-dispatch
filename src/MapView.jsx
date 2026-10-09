@@ -4,6 +4,7 @@ import { renderCity } from './map/city'
 import { createAnimator } from './map/animator'
 import { MODEL_BG, STATUS } from './lib/status'
 import { IconPaths } from './lib/icons'
+import { FaceImage } from './HeroFace'
 
 const CITY = renderCity()
 const STAMPS = { commit: ['Beres!', 'var(--ok)'], error: ['Waduh', 'var(--fail)'] }
@@ -46,7 +47,8 @@ function Marker({ id, here }) {
 }
 
 function MapHero({ hero, model, sidekick, traveling, selected, onSelect, nodeRef }) {
-  const r = sidekick ? 9 : 12
+  const r = sidekick ? 9 : 14
+  const face = sidekick ? null : <FaceImage hero={hero} r={r - 1} clipId={`face-clip-${hero.id}`} />
   const col = traveling ? 'var(--text)' : STATUS[hero.status].color
   const attention = hero.status === 'attention'
   return (
@@ -62,9 +64,9 @@ function MapHero({ hero, model, sidekick, traveling, selected, onSelect, nodeRef
       <circle className="sel" r={r + 7} />
       {attention && <circle className="ring-alert" r={r + 1} />}
       <circle r={r} fill={MODEL_BG[model] ?? '#999'} stroke="var(--ink)" strokeWidth="2" />
+      {face ?? <text y={sidekick ? 3 : 4} textAnchor="middle" fontSize={sidekick ? 8 : 11} fontWeight="700" fontFamily="var(--font-display)" fill="var(--ink)">{model}</text>}
       <circle r={r} fill="none" stroke={col} strokeWidth="2.5" />
       {hero.status === 'coding' && !traveling && <circle className="ring-progress" r={r + 4} stroke={col} />}
-      <text y={sidekick ? 3 : 4} textAnchor="middle" fontSize={sidekick ? 8 : 11} fontWeight="700" fontFamily="var(--font-display)" fill="var(--ink)">{model}</text>
       {attention && (
         <g transform={`translate(${r - 2} ${-r - 4})`}>
           <rect x="-6" y="-7" width="12" height="13" rx="2" fill="var(--alert)" stroke="var(--ink)" strokeWidth="1.5" />

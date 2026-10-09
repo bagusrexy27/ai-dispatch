@@ -1,4 +1,6 @@
 import { Icon } from './lib/icons'
+import { characterFor } from './lib/characters'
+import { HeroFace } from './HeroFace'
 import { LOC_NAMES, MODEL_BG, STATUS } from './lib/status'
 
 export function StatusLabel({ hero, traveling }) {
@@ -24,8 +26,13 @@ function HeroCard({ hero, index, selected, traveling, onSelect }) {
       {hero.status === 'attention' && <span className="alert-badge">!!</span>}
       {kid && <span className="sidekick">+ {kid.callsign}</span>}
       <div className="portrait" style={{ background: MODEL_BG[hero.model] ?? '#999' }}>
+        {characterFor(hero) ? (
+          <>
+            <HeroFace hero={hero} className="portrait-face" />
+            <span className="badge sm portrait-model">{hero.model}</span>
+          </>
+        ) : <span className="lm">{hero.model}</span>}
         <span className="num">{index + 1}</span>
-        <span className="lm">{hero.model}</span>
         <span className="stbar">
           <Icon name={traveling ? 'hq' : hero.status} style={{ stroke: traveling ? 'var(--text)' : STATUS[hero.status].color }} />
         </span>

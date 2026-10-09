@@ -104,7 +104,7 @@ export function applyEvent(state, ev) {
       ...state,
       heroes: state.heroes.filter((h) => h.id !== hero.id),
       calls: state.calls.filter((c) => c.heroId !== hero.id),
-      ...appendLog(state, { ...ev, heroId: hero.id, callsign: hero.callsign, model: hero.model, loc: hero.loc }),
+      ...appendLog(state, { ...ev, heroId: hero.id, callsign: hero.callsign, model: hero.model, variant: hero.variant, loc: hero.loc }),
     }
   }
 
@@ -120,7 +120,7 @@ export function applyEvent(state, ev) {
     ...state,
     heroes: state.heroes.map((h) => (h.id === hero.id ? { ...h, ...patch } : h)),
   }
-  if (!PASSIVE.has(ev.type)) Object.assign(next, appendLog(state, { ...ev, heroId: hero.id, callsign: hero.callsign, model: hero.model, loc: hero.loc }))
+  if (!PASSIVE.has(ev.type)) Object.assign(next, appendLog(state, { ...ev, heroId: hero.id, callsign: hero.callsign, model: hero.model, variant: hero.variant, loc: hero.loc }))
   if (ev.type === 'commit') next.done = state.done + 1
   if (ev.type === 'call_open') next.calls = [...state.calls, { ...ev.call, heroId: hero.id, state: 'ringing' }]
   if (ev.type === 'call_result' || ev.type === 'call_closed') next.calls = state.calls.filter((c) => c.callId !== ev.callId)

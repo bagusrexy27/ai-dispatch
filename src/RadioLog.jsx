@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef } from 'react'
 import { formatClock, logParts } from './lib/copy'
+import { HeroFace } from './HeroFace'
 
 const VISIBLE = 80
 const STICK_PX = 30
@@ -14,7 +15,7 @@ function LogLine({ entry, serious }) {
   return (
     <li>
       <span className="t mono">{formatClock(entry.at)}</span>
-      {entry.model && <span className={`badge sm m-${entry.model}`} aria-label={`model ${entry.model}`}>{entry.model}</span>}
+      {entry.model && <HeroFace hero={entry} className="sm" />}
       <span className={parts.tone}>
         {parts.prefix}
         <span className="cs" style={parts.whoColor ? { color: parts.whoColor } : undefined}>{parts.who}</span>

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Icon } from './lib/icons'
 import { KIND_TAG, LOC_NAMES } from './lib/status'
 import { Rich } from './RadioLog'
+import { HeroFace } from './HeroFace'
 
 const TEXT_DECISION = { permission: 'reply', choose: 'other', ask: 'answer' }
 
@@ -79,7 +80,7 @@ function IncomingCall({ call, hero, serious, closing, queued, onAnswer, panelRef
       </div>
       <div className="call-body">
         <div className="call-who">
-          <span className={`badge m-${hero.model}`} aria-label={`model ${hero.model}`}>{hero.model}</span>
+          <HeroFace hero={hero} className="face-md" />
           <span className="cs display">{hero.callsign}</span>
           <span className="where mono">· {LOC_NAMES[hero.loc]} · {hero.project}</span>
         </div>
